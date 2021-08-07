@@ -5,7 +5,6 @@
 #include <limits>
 #include <memory_resource>
 
-#include "base_iterator.h"
 #include "linear_base.h"
 
 
@@ -55,7 +54,7 @@ namespace linear::internal
         list_base& operator=(const list_base&) = default;
         list_base& operator=(list_base&&) noexcept = default;
 
-        virtual constexpr void swap(list_base&) noexcept;
+        constexpr bool swap(list_base&) noexcept;
 
 
         //*** Access ***//
@@ -121,14 +120,16 @@ namespace linear::internal
 
 
     template <Comparable Tp>
-    constexpr void list_base<Tp>::swap(list_base<Tp> &rhs) noexcept
+    constexpr bool list_base<Tp>::swap(list_base<Tp> &rhs) noexcept
     {
         if (rhs.m_allocator == m_allocator)
         {
             using std::swap;
             swap(rhs.m_capacity, m_capacity);
             swap(rhs.m_size, m_size);
+            return true;
         }
+        return false;
     }
 
 }   // namespace linear::internal::container

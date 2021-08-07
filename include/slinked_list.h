@@ -86,7 +86,7 @@ namespace linear::link
 
         slinked_list& operator=(const slinked_list&);
         slinked_list& operator=(slinked_list&&);
-        constexpr void swap(slinked_list&) noexcept override;
+        constexpr void swap(slinked_list&) noexcept;
 
 
         //*** Iterators and Access  ***//
@@ -122,7 +122,7 @@ namespace linear::link
     slinked_list<Tp>& slinked_list<Tp>::operator=(const slinked_list<Tp> &rhs)
     {
         if (this != &rhs)
-            try_assignment(rhs);
+            this->try_assignment(rhs);
         return *this;
     }
 
@@ -131,7 +131,7 @@ namespace linear::link
     slinked_list<Tp>& slinked_list<Tp>::operator=(slinked_list<Tp> &&rhs)
     {
         if (this != &rhs)
-            try_move(rhs);
+            this->try_move(rhs);
         return *this;
     }
 
@@ -139,12 +139,9 @@ namespace linear::link
     template <Comparable Tp>
     constexpr void slinked_list<Tp>::swap(slinked_list<Tp> &rhs) noexcept
     {
-        if (m_allocator == rhs.m_allocator)
+        if (internal::list_base<Tp>::swap(rhs))
         {
             using std::swap;
-            swap(rhs.m_capacity, this->m_capacity);
-            swap(rhs.m_size, this->m_size);
-
             auto *lhs_tail = rhs.empty() ? &m_head : rhs.m_tail_ptr;
             auto *rhs_tail = empty() ? &rhs.m_head : m_tail_ptr;
             swap(m_head.m_next, rhs.m_head.m_next);

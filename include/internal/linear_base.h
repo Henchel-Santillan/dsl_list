@@ -2,6 +2,7 @@
 #define DS_LIST_LINEAR_BASE_H
 
 
+#include "base_iterator.h"
 #include "traits.h"
 
 
@@ -23,7 +24,7 @@ namespace linear::internal
 
         //*** Member Functions ***//
         linear_base() = default;
-        
+
         linear_base(const linear_base&) = default;
         linear_base(linear_base&&) noexcept = default;
         linear_base& operator=(const linear_base&) = default;

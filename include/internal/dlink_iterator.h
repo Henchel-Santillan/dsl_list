@@ -1,23 +1,25 @@
 #ifndef DS_LIST_DLINK_ITERATOR_H
 #define DS_LIST_DLINK_ITERATOR_H
 
+#include <iterator>
+#include <utility>
 
+#include "base_iterator.h"
 #include "../dlinked_list.h"
-#include "slink_iterator.h"
 
 
 namespace linear::internal::iterators
 {
     template <Comparable Tp, bool isConst>
-    class dlink_iterator : public slink_iterator<Tp, isConst>
+    class dlink_iterator : public base_iterator<Tp, isConst>
     {
     public:
         using iterator_category = std::bidirectional_iterator_tag;
 
-        using difference_type = slink_iterator<Tp, isConst>::difference_type;
-        using value_type = slink_iterator<Tp, isConst>::value_type;
-        using pointer = slink_iterator<Tp, isConst>::pointer;
-        using reference = slink_iterator<Tp, isConst>::reference;
+        using difference_type = base_iterator<Tp, isConst>::difference_type;
+        using value_type = base_iterator<Tp, isConst>::value_type;
+        using pointer = base_iterator<Tp, isConst>::pointer;
+        using reference = base_iterator<Tp, isConst>::reference;
 
 
         // Required operator overloads to satisfy named requirements of LegacyBidirectionalIterator

@@ -31,8 +31,7 @@ The adapters `queue` and `stack` are similar in functionality to `array_queue` a
 
 ## For A Future Release
 * The adapter `array_deque` has numerous variations and is not (yet) covered.
+* Build instructions
 
 ## Testing (googletest)
 `Status` Unfinished
-
-A test suite will be developed for all four containers. Method declarations may also be moved up the inheritance hierarchy to avoid redefinition of similar special member functions.

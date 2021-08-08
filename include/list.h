@@ -186,8 +186,8 @@ namespace linear::randomaccess
         while (it != end())
         {
             auto elem = at(it);
+            ::operator delete m_data[it - begin()];
             std::allocator_traits<allocator_type>::destroy(std::addressof(elem));
-            delete m_data[it - begin()];
             this->m_size--;
             ++it;
         }

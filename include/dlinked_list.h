@@ -197,7 +197,7 @@ namespace linear::link
             auto *curr = source;
             source = source->m_next;
             this->m_size--;
-            this->m_allocator.destroy(std::addressof(curr->m_value));
+            std::allocator_traits<allocator_type>::destroy(this->m_allocator, std::addressof(curr->m_value));
             this->m_allocator.resource()->deallocate(curr, sizeof(dlink_node), alignof(dlink_node));
         }
         return start;

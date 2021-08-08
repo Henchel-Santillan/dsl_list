@@ -192,7 +192,7 @@ namespace linear::link
             auto *curr = er_fwd;
             er_fwd = er_fwd->m_next;
             this->m_size--;
-            this->m_allocator.destroy(std::addressof(curr->m_value));
+            std::allocator_traits<allocator_type>::destroy(this->m_allocator, std::addressof(curr->m_value));
             this->m_allocator.resource()->deallocate(curr, sizeof(slink_node), alignof(slink_node));
         }
 

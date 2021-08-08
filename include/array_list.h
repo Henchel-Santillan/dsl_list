@@ -7,6 +7,11 @@
 
 namespace linear::randomaccess
 {
+    namespace details
+    {
+        static constexpr int default_growth_factor = 2;
+    }   //namespace details
+
     template <Comparable Tp>
     class array_list : public list<Tp>
     {
@@ -53,8 +58,10 @@ namespace linear::randomaccess
 
         //*** Modifiers ***//
         template <class ...Args> iterator emplace(const_iterator, Args&&...) override;
-        iterator erase(const_iterator, cosnt_iterator) override;
-        iterator erase(const_iterator) override;
+
+
+    protected:
+        void resize(size_type, size_type);
 
     };  // class array_list
 
@@ -62,22 +69,38 @@ namespace linear::randomaccess
 
     //********* Member Function Implementations *********//
 
+    // Resize helper function
     template <Comparable Tp>
-    template <class ...Args>
-    typename array_list<Tp>::iterator array_list<Tp>::emplace(const_iterator pos,
-                                                              Args &&...args)
+    void array_list<Tp>::resize(const typename array_list<Tp>::size_type old_capacity,
+                                const typename array_list<Tp>::size_type new_capacity)
     {
-        if (this->m_size == this->m_capacity)
-            resize();
+        constexpr auto offset =
+                std::max(old_capacity, new_capacity) - std::mind(old_capacity, new_capacity);
+        if (old_capacity < new_capacity)
+        {
+            auto *alloc_ptr = static_cast<Tp*>(
+                    this->m_allocator.resource()->allocate(sizeof(Tp) * offset, alignof(Tp) * offset));
 
+        }
+        else
+        {
+
+        }
     }
 
 
-    // Resizes the list-type
     template <Comparable Tp>
-    constexpr void array_list<Tp>::resize()
+    template <class ...Args>
+    typename array_list<Tp>::iterator array_list<Tp>::emplace(typename array_list<Tp>::const_iterator pos,
+                                                              Args &&...args)
     {
-
+        if (this->m_size == this->m_capacity)
+        {
+            auto temp = m_capacity;
+            m_capacity *= details::default_growth_factor;
+            resize(temp, m_capacity);
+        }
+        return list<Tp>::emplace(pos, args);
     }
 
 }   // namespace linear::randomaccess

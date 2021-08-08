@@ -156,7 +156,7 @@ namespace linear::randomaccess
             throw;
         }
 
-        m_data[pos - begin()] = *val;
+        m_data[pos - begin()] = ::operator new (val) Tp(*val);
         this->m_size++;
         return static_cast<iterator>(pos);
     }
@@ -171,7 +171,8 @@ namespace linear::randomaccess
         {
             auto elem = at(it);
             this->m_size--;
-            std::allocator_traits<allocator_type>::destroy(std::addressof(elem));
+            ::operator delete m_data[it - begin()];
+            std::allocator_traits<allocator_type>::destroy(this->m_allocator, std::addressof(elem));
             this->m_allocator.resource()->deallocate(&elem, sizeof(Tp), alignof(Tp));
             ++it;
         }
@@ -186,6 +187,7 @@ namespace linear::randomaccess
         {
             auto elem = at(it);
             std::allocator_traits<allocator_type>::destroy(std::addressof(elem));
+            delete m_data[it - begin()];
             this->m_size--;
             ++it;
         }

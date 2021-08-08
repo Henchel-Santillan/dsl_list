@@ -15,7 +15,7 @@ Shared library for common linear, non-primitive data structures to be used in [d
 
 ## Supported containers
 ### List-Types
-* Array-based, random-access: `list` (fixed-size), `array_list` (dynamic)
+* Array-based, random-access: `list` (fixed-size), 
 * Link-based, sequential access: `slinked_list`, `dlinked_list`
 
 Note that a majority of the `deque` types are simple adapter classes and can be developed by deriving and hiding a fragment of the interfaces defined by the `list` types. What this means is that they simply “wrap” one of the three public containers in the shared library. In particular, `linked_queue` and `linked_stack` implement a common `deque` interface and define `push`, `pop`, and `peek` by means of the methods contained in `dlinked_list`. In a similar vein, `array_queue` and `array_stack` take after `list`. 

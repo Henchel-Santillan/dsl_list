@@ -2,11 +2,7 @@
 #define DS_LIST_SLINKED_LIST_H
 
 
-#include <algorithm>
 #include <memory>
-#include <memory_resource>
-#include <stdexcept>
-#include <utility>
 
 #include "internal/list_base.h"
 #include "internal/slink_iterator.h"
@@ -16,7 +12,8 @@ namespace linear::link
 {
     namespace details
     {
-        template <Comparable Tp> struct slink_node;     // forward declare slink_node struct
+        // forward declare slink_node struct
+        template <Comparable Tp> struct slink_node;
 
         template <Comparable Tp>
         struct snode_base
@@ -31,12 +28,10 @@ namespace linear::link
 
         };  // struct snode_base
 
+        // anonymous union to correctly align raw bytes
         template <Comparable Tp>
         struct slink_node : snode_base<Tp>
-        {
-            union { Tp m_value; };   // anonymous union to correctly align raw bytes
-
-        };  // struct slink_node
+        { union { Tp m_value; }; };  // struct slink_node
 
     }   // namespace details
 
@@ -64,22 +59,23 @@ namespace linear::link
         // Explicit ctor
         explicit slinked_list(const size_type capacity = default_capacity,
                               allocator_type allocator = {})
-                : internal::list_base<Tp>(capacity), m_head(),
-                  m_tail_ptr(nullptr), m_allocator(allocator) {}
+            : internal::list_base<Tp>(capacity, allocator),
+              m_head(),
+              m_tail_ptr(nullptr) {}
 
         // Extended copy-ctor
         slinked_list(const slinked_list &rhs, allocator_type allocator = {})
-                : slinked_list(allocator)
+            : slinked_list(rhs.m_capacity, allocator)
         { operator=(rhs); }
 
         // Move ctor
         slinked_list(slinked_list &&rhs)
-                : slinked_list(rhs.m_allocator)
+            : slinked_list(rhs.m_capacity, rhs.m_allocator)
         { operator=(std::move(rhs)); }
 
         // Extended move ctor
         slinked_list(slinked_list &&rhs, allocator_type allocator)
-                : slinked_list(allocator)
+            : slinked_list(rhs.m_capacity, allocator)
         { operator=(std::move(rhs)); }
 
         virtual ~slinked_list() = default;
@@ -102,6 +98,8 @@ namespace linear::link
         constexpr reference back() override                         { return m_tail_ptr->m_value; }
         constexpr const_reference back() const override             { return m_tail_ptr->m_value; }
 
+
+        //*** Modifiers ***//
         template <class... Args>
         iterator emplace(const_iterator, Args&&...) override;
         iterator erase(const_iterator, const_iterator) override;
@@ -142,6 +140,7 @@ namespace linear::link
         if (internal::list_base<Tp>::swap(rhs))
         {
             using std::swap;
+
             auto *lhs_tail = rhs.empty() ? &m_head : rhs.m_tail_ptr;
             auto *rhs_tail = empty() ? &rhs.m_head : m_tail_ptr;
             swap(m_head.m_next, rhs.m_head.m_next);
@@ -155,16 +154,16 @@ namespace linear::link
     typename slinked_list<Tp>::iterator slinked_list<Tp>::emplace(typename slinked_list<Tp>::const_iterator pos, Args &&...args)
     {
         auto *node = static_cast<slink_node*>(
-                m_allocator.resource()->allocate(sizeof(slink_node), alignof(slink_node)));
+                this->this->m_allocator.resource()->allocate(sizeof(slink_node), alignof(slink_node)));
         try
         {
-            m_allocator.construct(std::addressof(node->m_value),
+            this->m_allocator.construct(std::addressof(node->m_value),
                                   std::forward<Args>(args)...);
         }
 
         catch(...)
         {
-            m_allocator.resource()->deallocate(node, sizeof(slink_node), alignof(slink_node));
+            this->m_allocator.resource()->deallocate(node, sizeof(slink_node), alignof(slink_node));
             throw;
         }
 
@@ -174,7 +173,7 @@ namespace linear::link
             m_tail_ptr = node;
 
         this->m_size++;
-        return pos;
+        return static_cast<iterator>(pos);
     }
 
     template <Comparable Tp>
@@ -187,34 +186,18 @@ namespace linear::link
         if (er_rev == nullptr)
             m_tail = start.m_before;
         start.m_before->m_next = er_rev;
+
         while (er_fwd != er_rev)
         {
             auto *curr = er_fwd;
             er_fwd = er_fwd->m_next;
             this->m_size--;
-            m_allocator.destroy(std::addressof(curr->m_value));
-            m_allocator.resource()->deallocate(curr, sizeof(slink_node), alignof(slink_node));
+            this->m_allocator.destroy(std::addressof(curr->m_value));
+            this->m_allocator.resource()->deallocate(curr, sizeof(slink_node), alignof(slink_node));
         }
-        return start;
+
+        return static_cast<iterator>(start);
     }
-
-
-    //********* Non-Member Function Implementations *********//
-
-    template <Comparable Tp>
-    constexpr void swap(slinked_list<Tp> &lhs, slinked_list<Tp> &rhs) noexcept
-    { lhs.swap(rhs); }
-
-    template <Comparable Tp>
-    constexpr bool operator==(const slinked_list<Tp> &lhs, const slinked_list<Tp> &rhs) noexcept
-    {
-        if (lhs.size() != rhs.size()) return false;
-        return std::equal(lhs.begin(), lhs.end(), rhs.begin());
-    }
-
-    template <Comparable Tp>
-    [[nodiscard]] constexpr bool operator!=(const slinked_list<Tp> &lhs, const slinked_list<Tp> &rhs) noexcept
-    { return !operator==(lhs, rhs);  }
 
 }   // namespace linear::link
 

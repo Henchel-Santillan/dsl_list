@@ -33,27 +33,13 @@ namespace linear::internal
               m_size(0),
               m_allocator(allocator) {}
 
-        // Extended copy ctor
-        list_base(const list_base &rhs, allocator_type allocator = {})
-            : m_capacity(rhs.m_capacity),
-              m_size(rhs.m_size),
-              m_allocator(allocator) {}
-
-        // Move ctor
-        list_base(list_base &&rhs)
-            : list_base(rhs.m_allocator)
-        { operator=(std::move(rhs)); }
-
-        // Extended move ctor
-        list_base(list_base &&rhs, allocator_type allocator)
-            : list_base(allocator)
-        { operator=(std::move(rhs)); }
-
-        virtual ~list_base() { erase(begin(), end()); }
-
+        list_base(const list_base &rhs, allocator_type allocator = {}) = default;
+        list_base(list_base &&rhs) noexcept = default;
+        list_base(list_base &&rhs, allocator_type allocator) noexcept = default;
         list_base& operator=(const list_base&) = default;
         list_base& operator=(list_base&&) noexcept = default;
 
+        virtual ~list_base() { erase(begin(), end()); }
         constexpr bool swap(list_base&) noexcept;
 
 
@@ -131,6 +117,24 @@ namespace linear::internal
         }
         return false;
     }
+
+
+
+    //********* Non-Member Function Implementations **********//
+
+    // Non-member swap; specialization of std::swap - calls lhs.swap(rhs)
+    template <Comparable Tp>
+    constexpr void swap(list_base<Tp> &lhs, list_base<Tp> &rhs) noexcept
+    { lhs.swap(rhs); }
+
+    // Equality comparison operator overload
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator==(const list_base<Tp> &lhs, const list_base<Tp> &rhs) noexcept
+    { return (lhs.size() == rhs.size()) && std::equal(lhs.begin(), lhs.end(), rhs.begin()); }
+
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator!=(const list_base<Tp> &lhs, const list_base<Tp> &rhs) noexcept
+    { return !operator==(lhs, rhs); }
 
 }   // namespace linear::internal::container
 

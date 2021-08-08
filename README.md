@@ -31,6 +31,7 @@ The adapters `queue` and `stack` are similar in functionality to `array_queue` a
 
 ## For A Future Release
 * The adapter `array_deque` has numerous variations and is not (yet) covered.
+* A `vector`-type (to be named `array_list`) is still under construction.
 * Build instructions
 
 ## Testing (googletest)

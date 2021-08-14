@@ -171,7 +171,9 @@ namespace linear::randomaccess
         {
             auto elem = at(it);
             this->m_size--;
-            ::operator delete m_data[it - begin()];
+            delete m_data[it - begin()];
+            m_data[it - begin()] = nullptr;
+
             std::allocator_traits<allocator_type>::destroy(this->m_allocator, std::addressof(elem));
             this->m_allocator.resource()->deallocate(&elem, sizeof(Tp), alignof(Tp));
             ++it;
@@ -186,7 +188,9 @@ namespace linear::randomaccess
         while (it != end())
         {
             auto elem = at(it);
-            ::operator delete m_data[it - begin()];
+            delete m_data[it - begin()];
+            m_data[it - begin()] = nullptr;
+
             std::allocator_traits<allocator_type>::destroy(std::addressof(elem));
             this->m_size--;
             ++it;

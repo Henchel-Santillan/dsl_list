@@ -70,21 +70,35 @@ namespace linear::randomaccess
     //********* Member Function Implementations *********//
 
     // Resize helper function
+    // Probably some illegal things going on here
     template <Comparable Tp>
     void array_list<Tp>::resize(const typename array_list<Tp>::size_type old_capacity,
                                 const typename array_list<Tp>::size_type new_capacity)
     {
         constexpr auto offset =
                 std::max(old_capacity, new_capacity) - std::mind(old_capacity, new_capacity);
+
         if (old_capacity < new_capacity)
         {
             auto *alloc_ptr = static_cast<Tp*>(
                     this->m_allocator.resource()->allocate(sizeof(Tp) * offset, alignof(Tp) * offset));
+            try
+            {
+                this->m_allocator.construct(std::addressof(*alloc_ptr),
+                                            std::forward<Args>(args)...);
+            }
 
+            catch(...)
+            {
+                this->m_allocator.resource()->deallocate(alloc_ptr, sizeof(Tp), alignof(Tp));
+                throw;
+            }
         }
+
         else
         {
-
+            const_iterator it = begin() + offset;
+            list<Tp>::erase(it, end());
         }
     }
 

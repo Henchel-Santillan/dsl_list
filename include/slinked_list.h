@@ -154,7 +154,7 @@ namespace linear::link
     typename slinked_list<Tp>::iterator slinked_list<Tp>::emplace(typename slinked_list<Tp>::const_iterator pos, Args &&...args)
     {
         auto *node = static_cast<slink_node*>(
-                this->this->m_allocator.resource()->allocate(sizeof(slink_node), alignof(slink_node)));
+                this->m_allocator.resource()->allocate(sizeof(slink_node), alignof(slink_node)));
         try
         {
             this->m_allocator.construct(std::addressof(node->m_value),

@@ -2,7 +2,6 @@
 #define DS_LIST_LIST_H
 
 
-#include <memory>
 #include <stdexcept>
 
 #include "internal/list_base.h"
@@ -32,7 +31,7 @@ namespace linear::randomaccess
         explicit list(const size_type capacity = default_capacity,
                       allocator_type allocator = {})
             : internal::list_base<Tp>(capacity, allocator),
-              m_data(m_capacity <= 0 ? nullptr : std::make_unique<Tp[]>(m_capacity)) {}
+              m_data(this->m_capacity <= 0 ? nullptr : new Tp[this->m_capacity]) {}
 
         // Extended copy ctor
         list(const list &rhs, allocator_type allocator = {})

@@ -17,15 +17,15 @@ namespace linear::randomaccess
     {
     public:
         //*** Member Types ***//
-        using allocator_type = list<Tp>::allocator_type;
-        using size_type = list<Tp>::size_type;
-        using reference = list<Tp>::reference;
-        using const_reference = list<Tp>::const_reference;
+        using allocator_type = typename list<Tp>::allocator_type;
+        using size_type = typename list<Tp>::size_type;
+        using reference = typename list<Tp>::reference;
+        using const_reference = typename list<Tp>::const_reference;
 
-        using iterator = list<Tp>::iterator;
-        using const_iterator = list<Tp>::const_iterator;
-        using reverse_iterator = list<Tp>::reverse_iterator;
-        using const_reverse_iterator = list<Tp>::const_reverse_iterator;
+        using iterator = typename list<Tp>::iterator;
+        using const_iterator = typename list<Tp>::const_iterator;
+        using reverse_iterator = typename list<Tp>::reverse_iterator;
+        using const_reverse_iterator = typename list<Tp>::const_reverse_iterator;
 
 
         //*** Member Functions ***//
@@ -76,7 +76,7 @@ namespace linear::randomaccess
                                 const typename array_list<Tp>::size_type new_capacity)
     {
         constexpr auto offset =
-                std::max(old_capacity, new_capacity) - std::mind(old_capacity, new_capacity);
+                std::max(old_capacity, new_capacity) - std::min(old_capacity, new_capacity);
 
         if (old_capacity < new_capacity)
         {
@@ -110,12 +110,30 @@ namespace linear::randomaccess
     {
         if (this->m_size == this->m_capacity)
         {
-            auto temp = m_capacity;
-            m_capacity *= details::default_growth_factor;
-            resize(temp, m_capacity);
+            auto temp = this->m_capacity;
+            this->m_capacity *= details::default_growth_factor;
+            resize(temp, this->m_capacity);
         }
         return list<Tp>::emplace(pos, args);
     }
+    
+    
+    
+    //********* Non-Member Function Implementations *********//
+
+    // Non-member swap; specialization of std::swap - calls lhs.swap(rhs)
+    template <Comparable Tp>
+    constexpr void swap(array_list<Tp> &lhs, array_list<Tp> &rhs) noexcept
+    { lhs.swap(rhs); }
+
+    // Equality comparison operator overload
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator==(const array_list<Tp> &lhs, const array_list<Tp> &rhs) noexcept
+    { return list<Tp>::operator==(lhs, rhs); }
+
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator!=(const array_list<Tp> &lhs, const array_list<Tp> &rhs) noexcept
+    { return !list<Tp>::operator==(lhs, rhs); }
 
 }   // namespace linear::randomaccess
 

@@ -16,15 +16,15 @@ namespace linear::randomaccess
     {
     public:
         //*** Member Types ***//
-        using allocator_type = internal::list_base<Tp>::allocator_type;
+        using allocator_type = typename internal::list_base<Tp>::allocator_type;
         using size_type = typename internal::list_base<Tp>::size_type;
         using reference = typename internal::list_base<Tp>::reference;
         using const_reference = typename internal::list_base<Tp>::const_reference;
 
-        using iterator = internal::iterators::list_iterator<Tp, false>;
-        using const_iterator = internal::iterators::list_iterator<Tp, true>;
-        using reverse_iterator = std::reverse_iterator<iterator>;
-        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+        using iterator = typename internal::iterators::list_iterator<Tp, false>;
+        using const_iterator = typename internal::iterators::list_iterator<Tp, true>;
+        using reverse_iterator = typename std::reverse_iterator<iterator>;
+        using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
 
 
         //*** Member Functions ***//
@@ -49,7 +49,7 @@ namespace linear::randomaccess
             : list(rhs.m_capacity, allocator)
         { operator=(std::move(rhs)); }
 
-        virtual ~list() = default;
+        virtual ~list();
 
         list& operator=(const list&);
         list& operator=(list&&);
@@ -89,13 +89,22 @@ namespace linear::randomaccess
 
 
     protected:
-        std::unique_ptr<Tp[]> m_data;
+        Tp *m_data;
 
     };  // class list
 
 
 
     //********* Member Function Implementations *********//
+
+    // Destructor
+    template <Comparable Tp>
+    list<Tp>::~list()
+    {
+        delete[] m_data;
+        m_data = nullptr;
+    }
+
 
     // Copy assign
     template <Comparable Tp>
@@ -132,7 +141,7 @@ namespace linear::randomaccess
     template <Comparable Tp>
     constexpr typename list<Tp>::reference list<Tp>::at(const typename list<Tp>::size_type pos)
     {
-        if (pos < 0 || pos >= this->m_size)
+        if (pos >= this->m_size)
             throw std::out_of_range("Index out of bounds.");
         return m_data[pos];
     }
@@ -147,7 +156,7 @@ namespace linear::randomaccess
         try
         {
             this->m_allocator.construct(std::addressof(*val),
-                                  std::forward<Args>(args)...);
+                                        std::forward<Args>(args)...);
         }
 
         catch (...)
@@ -181,6 +190,7 @@ namespace linear::randomaccess
         return static_cast<iterator>(start);
     }
 
+
     template <Comparable Tp>
     constexpr void list<Tp>::clear() noexcept
     {
@@ -196,7 +206,26 @@ namespace linear::randomaccess
             ++it;
         }
     }
+    
+    
+    
+    //********* Non-Member Function Implementations *********//
+
+    // Non-member swap; specialization of std::swap - calls lhs.swap(rhs)
+    template <Comparable Tp>
+    constexpr void swap(list<Tp> &lhs, list<Tp> &rhs) noexcept
+    { lhs.swap(rhs); }
+
+    // Equality comparison operator overload
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator==(const list<Tp> &lhs, const list<Tp> &rhs) noexcept
+    { return internal::operator==(lhs, rhs); }
+
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator!=(const list<Tp> &lhs, const list<Tp> &rhs) noexcept
+    { return !internal::operator==(lhs, rhs); }
 
 }   // namespace linear::randomaccess
+
 
 #endif //DS_LIST_LIST_H

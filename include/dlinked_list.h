@@ -209,16 +209,16 @@ namespace linear::link
 
     // Non-member swap; specialization of std::swap - calls lhs.swap(rhs)
     template <Comparable Tp>
-    constexpr void swap(slinked_list<Tp> &lhs, slinked_list<Tp> &rhs) noexcept
+    constexpr void swap(dlinked_list<Tp> &lhs, dlinked_list<Tp> &rhs) noexcept
     { lhs.swap(rhs); }
 
     // Equality comparison operator overload
     template <Comparable Tp>
-    [[nodiscard]] constexpr bool operator==(const slinked_list<Tp> &lhs, const slinked_list<Tp> &rhs) noexcept
+    [[nodiscard]] constexpr bool operator==(const dlinked_list<Tp> &lhs, const dlinked_list<Tp> &rhs) noexcept
     { return internal::operator==(lhs, rhs); }
 
     template <Comparable Tp>
-    [[nodiscard]] constexpr bool operator!=(const slinked_list<Tp> &lhs, const slinked_list<Tp> &rhs) noexcept
+    [[nodiscard]] constexpr bool operator!=(const dlinked_list<Tp> &lhs, const dlinked_list<Tp> &rhs) noexcept
     { return !internal::operator==(lhs, rhs); }
 
 }   // namespace linear::link

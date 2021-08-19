@@ -64,7 +64,7 @@ namespace linear::link
                               allocator_type allocator = {})
             : internal::list_base<Tp>(capacity, allocator),
               m_head(nullptr), 
-              m_tail(nullptr){}
+              m_tail(nullptr) {}
 
         // Extended copy-ctor
         dlinked_list(const dlinked_list &rhs, allocator_type allocator = {})
@@ -132,7 +132,7 @@ namespace linear::link
 
     // Move assign
     template <Comparable Tp>
-    dlinked_list<Tp> & dlinked_list<Tp>::operator=(dlinked_list<Tp> &&rhs)
+    dlinked_list<Tp>& dlinked_list<Tp>::operator=(dlinked_list<Tp> &&rhs)
     {
         if (this != &rhs)
             this->try_move(rhs);
@@ -161,7 +161,7 @@ namespace linear::link
         try
         {
             this->m_allocator.construct(std::addressof(node->m_value),
-                                  std::forward<Args>(args)...);
+                                        std::forward<Args>(args)...);
         }
 
         catch(...)
@@ -177,7 +177,7 @@ namespace linear::link
         pos->m_current->m_prev = node;
 
         this->m_size++;
-        return pos;
+        return static_cast<iterator>(pos);
     }
 
     template <Comparable Tp>
@@ -200,8 +200,26 @@ namespace linear::link
             std::allocator_traits<allocator_type>::destroy(this->m_allocator, std::addressof(curr->m_value));
             this->m_allocator.resource()->deallocate(curr, sizeof(dlink_node), alignof(dlink_node));
         }
-        return start;
+        return static_cast<iterator>(start);
     }
+
+
+
+    //********* Non-Member Function Implementations *********//
+
+    // Non-member swap; specialization of std::swap - calls lhs.swap(rhs)
+    template <Comparable Tp>
+    constexpr void swap(slinked_list<Tp> &lhs, slinked_list<Tp> &rhs) noexcept
+    { lhs.swap(rhs); }
+
+    // Equality comparison operator overload
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator==(const slinked_list<Tp> &lhs, const slinked_list<Tp> &rhs) noexcept
+    { return internal::operator==(lhs, rhs); }
+
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator!=(const slinked_list<Tp> &lhs, const slinked_list<Tp> &rhs) noexcept
+    { return !internal::operator==(lhs, rhs); }
 
 }   // namespace linear::link
 

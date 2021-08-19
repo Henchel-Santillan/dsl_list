@@ -51,8 +51,8 @@ namespace linear::link
         using reference = typename internal::list_base<Tp>::reference;
         using const_reference = typename internal::list_base<Tp>::const_reference;
 
-        using iterator = internal::iterators::slink_iterator<Tp, false>;
-        using const_iterator = internal::iterators::slink_iterator<Tp, true>;
+        using iterator = typename internal::iterators::slink_iterator<Tp, false>;
+        using const_iterator = typename internal::iterators::slink_iterator<Tp, true>;
 
 
         //*** Member Functions ***//
@@ -184,7 +184,7 @@ namespace linear::link
         auto *er_fwd = start.m_before->m_next, *er_rev = finish.m_before->m_next;
 
         if (er_rev == nullptr)
-            m_tail = start.m_before;
+            m_tail_ptr = start.m_before;
         start.m_before->m_next = er_rev;
 
         while (er_fwd != er_rev)
@@ -198,6 +198,25 @@ namespace linear::link
 
         return static_cast<iterator>(start);
     }
+
+
+
+    //********* Non-Member Function Implementations *********//
+
+    // Non-member swap; specialization of std::swap - calls lhs.swap(rhs)
+    template <Comparable Tp>
+    constexpr void swap(slinked_list<Tp> &lhs, slinked_list<Tp> &rhs) noexcept
+    { lhs.swap(rhs); }
+
+    // Equality comparison operator overload
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator==(const slinked_list<Tp> &lhs, const slinked_list<Tp> &rhs) noexcept
+    { return internal::operator==(lhs, rhs); }
+
+    template <Comparable Tp>
+    [[nodiscard]] constexpr bool operator!=(const slinked_list<Tp> &lhs, const slinked_list<Tp> &rhs) noexcept
+    { return !internal::operator==(lhs, rhs); }
+    
 
 }   // namespace linear::link
 

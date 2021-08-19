@@ -22,7 +22,7 @@ namespace linear
 
     };  // concept Comparable
 
-}   // namespace internal
+}   // namespace linear
 
 
 #endif //DS_LIST_TRAITS_H

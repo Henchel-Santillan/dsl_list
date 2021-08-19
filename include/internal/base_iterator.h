@@ -20,7 +20,4 @@ namespace linear::internal::iterators
 
 }   // namespace linear::internal::iterators
 
-
-
-
 #endif //DS_LIST_BASE_ITERATOR_H

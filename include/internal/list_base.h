@@ -20,8 +20,8 @@ namespace linear::internal
         using size_type = typename linear_base<Tp>::size_type;
         using difference_type = std::ptrdiff_t;
 
-        using iterator = linear_base<Tp>::iterator;
-        using const_iterator = linear_base<Tp>::const_iterator;
+        using iterator = typename linear_base<Tp>::iterator;
+        using const_iterator = typename linear_base<Tp>::const_iterator;
         using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
 
 
@@ -59,8 +59,8 @@ namespace linear::internal
         constexpr void pop_front()                          { erase(end()); }
         constexpr void pop_back()                           { erase(begin()); }
 
-        template <class... Args> reference emplace_back(Args &&...args)   { emplace(end(), std::forward(args)...); }
-        template <class... Args> reference emplace_front(Args &&...args)  { emplace(begin(), std::forward(args)...); }
+        template <class... Args> reference emplace_back(Args &&...args)   { return *(emplace(end(), std::forward(args)...)); }
+        template <class... Args> reference emplace_front(Args &&...args)  { return *(emplace(begin(), std::forward(args)...)); }
 
         iterator insert(const_iterator pos, const Tp &value)    { return emplace(pos, value); }
         iterator insert(const_iterator pos, Tp &&value)         { return emplace(pos, std::move(value)); }

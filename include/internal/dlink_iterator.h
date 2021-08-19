@@ -1,8 +1,8 @@
 #ifndef DS_LIST_DLINK_ITERATOR_H
 #define DS_LIST_DLINK_ITERATOR_H
 
+
 #include <iterator>
-#include <utility>
 
 #include "base_iterator.h"
 #include "../dlinked_list.h"
@@ -59,10 +59,12 @@ namespace linear::internal::iterators
 
 
     private:
-        explicit dlink_iterator(const dlink_node<Tp> *current)
-                : m_current(const_cast<dlink_node<Tp>*>(current)) {}
+        using dlink_node = typename link::details::dlink_node<Tp>;
 
-        dlink_node<Tp> *m_current;
+        constexpr explicit dlink_iterator(const dlink_node *current)
+                : m_current(const_cast<dlink_node*>(current)) {}
+
+        dlink_node *m_current;
         friend class dlinked_list<Tp>;
 
     };  // class dlink_iterator

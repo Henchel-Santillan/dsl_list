@@ -3,7 +3,6 @@
 
 
 #include <iterator>
-#include <utility>
 
 #include "base_iterator.h"
 #include "../slinked_list.h"
@@ -18,28 +17,28 @@ namespace linear::internal::iterators
         //*** Member Types ***//
         using iterator_category = std::forward_iterator_tag;
 
-        using difference_type = base_iterator<Tp, isConst>::difference_type;
-        using value_type = base_iterator<Tp, isConst>::value_type;
-        using pointer = base_iterator<Tp, isConst>::pointer;
-        using reference = base_iterator<Tp, isConst>::reference;
+        using difference_type = typename base_iterator<Tp, isConst>::difference_type;
+        using value_type = typename base_iterator<Tp, isConst>::value_type;
+        using pointer = typename base_iterator<Tp, isConst>::pointer;
+        using reference = typename base_iterator<Tp, isConst>::reference;
 
 
         //*** Member Functions ***//
 
         // Required operator overloads to satisfy named requirements of LegacyForwardIterator
-        [[nodiscard]] virtual constexpr reference operator*() const noexcept
+        [[nodiscard]] constexpr reference operator*() const noexcept
         { return m_before->m_next->m_value; }
 
-        [[nodiscard]] virtual constexpr pointer operator->() const noexcept
+        [[nodiscard]] constexpr pointer operator->() const noexcept
         { return std::addressof(m_before->m_next->m_value); }
 
-        virtual constexpr slink_iterator& operator++() noexcept
+        constexpr slink_iterator& operator++() noexcept
         {
             m_before = m_before->m_next;
             return *this;
         }
 
-        virtual constexpr slink_iterator operator++(int) noexcept
+        constexpr slink_iterator operator++(int) noexcept
         {
             slink_iterator temp(*this);
             ++(*this);
@@ -50,11 +49,13 @@ namespace linear::internal::iterators
 
 
     private:
-        // Private explicit ctor to enable iterator construction for only friend classes
-        explicit slink_iterator(const slink_node<Tp> *before)
-                : m_before(const_cast<slink_node<Tp>*>(before)) {}
+        using slink_node = typename link::details::slink_node<Tp>;
 
-        slink_node<Tp> *m_before;       // pointer to node before current node (sentinel)
+        // Private explicit ctor to enable iterator construction for only friend classes
+        constexpr explicit slink_iterator(const slink_node *before)
+                : m_before(const_cast<slink_node*>(before)) {}
+
+        slink_node *m_before;       // pointer to node before current node (sentinel)
         friend class slinked_list<Tp>;
 
     };  // class slink_iterator

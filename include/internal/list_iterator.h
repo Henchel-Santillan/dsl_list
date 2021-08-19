@@ -3,8 +3,6 @@
 
 
 #include <iterator>
-#include <utility>
-
 #include "base_iterator.h"
 
 
@@ -18,10 +16,10 @@ namespace linear::internal::iterators
         using iterator_concept = std::contiguous_iterator_tag;
         using iterator_category = std::random_access_iterator_tag;
 
-        using difference_type = base_iterator<Tp, isConst>::difference_type;
-        using value_type = base_iterator<Tp, isConst>::value_type;
-        using pointer = base_iterator<Tp, isConst>::pointer;
-        using reference = base_iterator<Tp, isConst>::reference;
+        using difference_type = typename base_iterator<Tp, isConst>::difference_type;
+        using value_type = typename base_iterator<Tp, isConst>::value_type;
+        using pointer = typename base_iterator<Tp, isConst>::pointer;
+        using reference = typename base_iterator<Tp, isConst>::reference;
 
 
         //*** Member Functions ***//

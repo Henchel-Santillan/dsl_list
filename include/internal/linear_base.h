@@ -3,7 +3,6 @@
 
 
 #include "base_iterator.h"
-#include "traits.h"
 
 
 namespace linear::internal
@@ -18,8 +17,8 @@ namespace linear::internal
         using const_reference = const value_type&;
         using size_type = std::size_t;
 
-        using iterator = internal::iterators::base_iterator<Tp, false>;
-        using const_iterator = internal::iterators::base_iterator<Tp, true>;
+        using iterator = typename internal::iterators::base_iterator<Tp, false>;
+        using const_iterator = typename internal::iterators::base_iterator<Tp, true>;
 
 
         //*** Member Functions ***//
@@ -34,12 +33,12 @@ namespace linear::internal
 
         //*** Element Access ***//
         virtual constexpr iterator begin() noexcept = 0;
-        [[nodiscard]] virtual constexpr const_iterator begin() const noexcept = 0;
-        [[nodiscard]] virtual constexpr const_iterator cbegin() const noexcept = 0;
+        virtual constexpr const_iterator begin() const noexcept = 0;
+        virtual constexpr const_iterator cbegin() const noexcept = 0;
 
         virtual constexpr iterator end() noexcept = 0;
-        [[nodiscard]] virtual constexpr const_iterator end() const noexcept = 0;
-        [[nodiscard]] virtual constexpr const_iterator cend() const noexcept = 0;
+        virtual constexpr const_iterator end() const noexcept = 0;
+        virtual constexpr const_iterator cend() const noexcept = 0;
 
         virtual constexpr reference front() = 0;
         virtual constexpr const_reference front() const = 0;

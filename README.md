@@ -18,9 +18,7 @@ Shared library for common linear, non-primitive data structures to be used in [d
 * Array-based, random-access: `list` (fixed-size), 
 * Link-based, sequential access: `slinked_list`, `dlinked_list`
 
-Note that a majority of the `deque` types are simple adapter classes and can be developed by deriving and hiding a fragment of the interfaces defined by the `list` types. What this means is that they simply “wrap” one of the three public containers in the shared library. In particular, `linked_queue` and `linked_stack` implement a common `deque` interface and define `push`, `pop`, and `peek` by means of the methods contained in `dlinked_list`. In a similar vein, `array_queue` and `array_stack` take after `list`. 
-
-For implementations of these adapters, see [dstruct_vis](https://github.com/Henchel-Santillan/dstruct-vis).
+Note that a majority of the `deque` types are simple adapter classes and can be developed by deriving and hiding a fragment of the interfaces defined by the `list` types. What this means is that they simply “wrap” one of the four public containers in the shared library. In particular, `linked_queue` and `linked_stack` implement a common `deque` interface and define `push`, `pop`, and `peek` by means of the methods contained in `dlinked_list`. In a similar vein, `array_queue` and `array_stack` take after `array_list`. 
 
 The adapters `queue` and `stack` are similar in functionality to `array_queue` and `array_stack`, except `queue` and `stack` are not inherently resizable (static capacity).
 
@@ -31,9 +29,6 @@ The adapters `queue` and `stack` are similar in functionality to `array_queue` a
 
 ## TODO
 * Append `dsl` namespace (namespace refactor)
-* The adapter `array_deque` has numerous variations and is not (yet) covered.
-* A `vector`-type (to be named `array_list`) is still under construction.
+* An extension to the dsl namespace defining the adapters discussed above
 * Build instructions
-
-## Testing (googletest)
-`Status` Unfinished
+* Unit testing

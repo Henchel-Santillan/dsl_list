@@ -1,12 +1,5 @@
 # ds_list
-Shared library for common linear, non-primitive data structures to be used in [dstruct-vis](https://github.com/Henchel-Santillan/dstruct-vis). 
-
-## Toolchain
-* Environment: `cygwin64 v3.2.0`
-* CMake: `v3.19.2`
-* Compiler: `gcc 10`
-* Debugger: `gdb v9.2`
-* CXX_Standard: `C++20`
+Shared library for common linear, non-primitive data structures
 
 ## Features
 * All classes are designed to be stl-compatible. This means C++ standard library algorithms can be applied to them.

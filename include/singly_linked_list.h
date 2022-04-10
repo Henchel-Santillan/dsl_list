@@ -14,7 +14,6 @@ namespace dsl {
 
     template <typename Tp> class singly_linked_list;
 
-
     namespace details {
 
         template <typename Tp> struct singly_node;
@@ -37,7 +36,7 @@ namespace dsl {
         };
 
         /**
-         * @brief Node in a singly linked list. Derives the base representation and wraps 
+         * @brief Node in a singly-linked list. Derives the base representation and wraps 
          * the value type in an anonymous union to help align raw bytes.
          * 
          * @tparam Tp 
@@ -249,6 +248,12 @@ namespace dsl {
         singly_linked_list(singly_linked_list &&other) 
             : singly_linked_list(other, other.get_allocator())
         {}
+
+
+        //* Destructor *//
+        ~singly_linked_list() {
+            erase_after(before_begin(), end());
+        }
 
 
         //* Assignment operator overloads *//

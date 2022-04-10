@@ -141,6 +141,7 @@ namespace dsl {
                 return it;
             }
 
+
         private:
             friend class singly_linked_list<Tp>;
 
@@ -181,13 +182,6 @@ namespace dsl {
 
         //* Constructors *//
 
-        singly_linked_list()
-            : list_base()
-            , m_allocator() 
-            , m_head()
-            , m_tail(nullptr)
-        {}
-
         explicit singly_linked_list(allocator_type allocator = {})
             : list_base()
             , m_allocator(allocator)
@@ -198,19 +192,13 @@ namespace dsl {
         singly_linked_list(const size_type count,
                            const Tp& value,
                            allocator_type allocator = {})
-            : list_base(count)
-            , m_allocator(allocator)
-            , m_head()
-            , m_tail(nullptr)
+            : singly_linked_list(allocator)
         { assign(count, value); }
 
         explicit singly_linked_list(const size_type count, 
                                     allocator_type allocator = {})
-            : list_base(count)
-            , m_allocator(allocator)
-            , m_head()
-            , m_tail(nullptr)
-        { assign(count, Tp()); }
+            : singly_linked_list(count, Tp(), allocator)
+        {}
 
 
         template <class InputIt>
@@ -252,14 +240,14 @@ namespace dsl {
 
         //* Destructor *//
         ~singly_linked_list() {
-            erase_after(before_begin(), end());
+            clear();
         }
 
 
         //* Assignment operator overloads *//
 
-        singly_linked_list& operator=(const singly_linked_list &other);
-        singly_linked_list& operator=(singly_linked_list &&other);
+        singly_linked_list& operator=(const singly_linked_list&);
+        singly_linked_list& operator=(singly_linked_list&&);
 
 
         //* Assign and allocator access *//
@@ -326,6 +314,8 @@ namespace dsl {
 
         //* Modifiers *//
 
+        constexpr void clear() noexcept;
+
         constexpr iterator insert_after(const_iterator, const Tp&);
         constexpr iterator insert_after(const_iterator, Tp&&);
         constexpr iterator insert_after(const_iterator, const size_type, const Tp&);
@@ -380,7 +370,7 @@ namespace dsl {
 
     template <typename Tp>
     void singly_linked_list<Tp>::try_assignment(const singly_linked_list<Tp> &other) {
-        erase_after(before_begin(), end());
+        clear();
         for (const Tp& value : other) 
             insert_after(end(), value);
     }
@@ -388,7 +378,7 @@ namespace dsl {
 
     template <typename Tp>
     void singly_linked_list<Tp>::try_move(singly_linked_list &&other) {
-        erase_after(before_begin(), end());
+        clear();
         swap(other);
     }
 
@@ -435,7 +425,9 @@ namespace dsl {
 
     template <typename Tp>
     constexpr void singly_linked_list<Tp>::assign(const size_type count, const Tp& value) {
-        resize(count, value);
+        resize(count);
+        for (auto it = begin(); it != end(); ++it) 
+            *it = value;
     }
 
     template <typename Tp>
@@ -464,6 +456,11 @@ namespace dsl {
     //* Modifiers *//
 
     template <typename Tp>
+    constexpr void singly_linked_list<Tp>::clear() noexcept {
+        erase_after(before_begin(), end());
+    }
+
+    template <typename Tp>
     constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, const Tp &value) {
         return emplace_after(pos, value);
     }
@@ -476,10 +473,8 @@ namespace dsl {
     template <typename Tp>
     constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, const size_type count, const Tp &value) {
         auto it = dynamic_cast<iterator>(pos);
-        while (count > 0) {
-            pos = emplace_after(pos, value);
-            --count;
-        }
+        for (auto i = 0; i < count; ++i) 
+            it = emplace_after(pos, value);
         return it;
     }
 
@@ -520,13 +515,15 @@ namespace dsl {
 
         if (pos.m_prev == m_tail) 
             m_tail = pNode;
-        ++m_size;
+
+        ++this->m_size;
         return std::next(dynamic_cast<iterator>(pos));
     }
 
     template <typename Tp>
     constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::erase_after(const_iterator pos) {
-        erase_after(pos, std::next(pos));
+        auto it = std::next(pos);
+        return erase_after(it, std::next(it));
     }
 
     template <typename Tp>
@@ -542,12 +539,12 @@ namespace dsl {
         while (pNext != pPast) {
             auto pOld = pNext;
             pNext = pNext->m_next;
-            --m_size;
-            m_allocator.destory(std::addressof(pOld->m_value));
-            m_allocator.resource()->deallocate(pNode, sizeof(node_t), alignof(node_t));
+            --this->m_size;
+            std::allocator_traits<allocator_type>::destroy(m_allocator, std::addressof(pOld->m_value));
+            m_allocator.resource()->deallocate(pOld, sizeof(node_t), alignof(node_t));
         }
 
-        return first;
+        return dynamic_cast<iterator>(first);
     }
 
     template <typename Tp>
@@ -580,18 +577,20 @@ namespace dsl {
 
     template <typename Tp>
     constexpr void singly_linked_list<Tp>::resize(const size_type count) {
-        if (count < m_size)         // need to erase elements
+        if (count < this->m_size)         // need to erase elements
             resize_erase(count);
-        else if (count > m_size)    // need to add elements
+        else if (count > this->m_size)    // need to add elements
             resize_emplace(count, Tp());
+        this->m_size = count;
     }
 
     template <typename Tp>
     constexpr void singly_linked_list<Tp>::resize(const size_type count, const Tp &value) {
-        if (count < m_size) 
+        if (count < this->m_size) 
             resize_erase(count);
-        else if (count > m_size) 
+        else if (count > this->m_size) 
             resize_emplace(count, value);
+        this->m_size = count;
     }
 
     template <typename Tp>
@@ -602,7 +601,7 @@ namespace dsl {
 
             using std::swap;
             swap(m_head.m_next, other.m_head.m_next);
-            swap(m_size, other.m_size);
+            swap(this->m_size, other.m_size);
             m_tail = pTail;
             other.m_tail = pOtherTail;
         }

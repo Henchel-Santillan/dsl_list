@@ -254,7 +254,7 @@ namespace dsl {
 
         //* Destructor *//
         ~doubly_linked_list() {
-            erase(begin(), end());
+            clear();
         }
 
 
@@ -264,12 +264,12 @@ namespace dsl {
         doubly_linked_list& operator=(doubly_linked_list&&);
 
 
-        //* Assign and allocator access
+        //* Assign and allocator access *//
         
         constexpr void assign(const size_type, const Tp&);
 
         template <class InputIt>
-        constexpr void assign(InputIt first, InputIt last);
+        constexpr void assign(InputIt, InputIt);
 
         constexpr void assign(std::initializer_list<Tp>);
 
@@ -385,6 +385,42 @@ namespace dsl {
         constexpr void resize(const size_type, const Tp&);
 
         constexpr void swap(doubly_linked_list&) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value);
+
+
+        //* Operations *//
+
+        void merge(doubly_linked_list&);
+        void merge(doubly_linked_list&&);
+
+        template <class Compare>
+        void merge(doubly_linked_list&, Compare);
+
+        template <class Compare>
+        void merge(doubly_linked_list&&, Compare);
+
+        void splice(const_iterator, doubly_linked_list&);
+        void splice(const_iterator, doubly_linked_list&&);
+        void splice(const_iterator, doubly_linked_list&, const_iterator);
+        void splice(const_iterator, doubly_linked_list&&, const_iterator);
+        void splice(const_iterator, doubly_linked_list&, const_iterator, const_iterator);
+        void splice(const_iterator, doubly_linked_list&&, const_iterator, const_iterator);
+
+        size_type remove(const Tp&);
+
+        template <class UnaryPredicate>
+        size_type remove_if(UnaryPredicate);
+
+        void reverse() noexcept;
+
+        size_type unique();
+
+        template <class BinaryPredicate>
+        size_type unique(BinaryPredicate);
+
+        void sort();
+
+        template <class Compare>
+        void sort(Compare);
 
 
     private:

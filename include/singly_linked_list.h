@@ -348,6 +348,42 @@ namespace dsl {
         constexpr void swap(singly_linked_list&) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value);
 
 
+        //* Operations *//
+
+        void merge(singly_linked_list&);
+        void merge(singly_linked_list&&);
+
+        template <class Compare>
+        void merge(singly_linked_list&, Compare);
+
+        template <class Compare>
+        void merge(singly_linked_list&&, Compare);
+
+        void splice_after(const_iterator, singly_linked_list&);
+        void splice_after(const_iterator, singly_linked_list&&);
+        void splice_after(const_iterator, singly_linked_list&, const_iterator);
+        void splice_after(const_iterator, singly_linked_list&&, const_iterator);
+        void splice_after(const_iterator, singly_linked_list&, const_iterator, const_iterator);
+        void splice_after(const_iterator, singly_linked_list&&, const_iterator, const_iterator);
+
+        size_type remove(const Tp&);
+
+        template <class UnaryPredicate>
+        size_type remove_if(UnaryPredicate);
+
+        void reverse() noexcept;
+
+        size_type unique();
+
+        template <class BinaryPredicate>
+        size_type unique(BinaryPredicate);
+
+        void sort();
+
+        template <class Compare>
+        void sort(Compare);
+
+
     private:
         using node_base_t = typename details::singly_node_base<Tp>;
         using node_t = typename details::singly_node<Tp>;

@@ -431,7 +431,7 @@ namespace dsl {
         node_base_t *m_head;
         node_base_t *m_tail;
 
-        void try_assignment(const doubly_linked_list&);
+        void try_copy(const doubly_linked_list&);
         void try_move(doubly_linked_list&&);
         void resize_erase(const size_type);
         void resize_emplace(const size_type, const Tp&);
@@ -444,7 +444,7 @@ namespace dsl {
     //*** Private ***//
 
     template <typename Tp>
-    void doubly_linked_list<Tp>::try_assignment(const doubly_linked_list<Tp> &other) {
+    void doubly_linked_list<Tp>::try_copy(const doubly_linked_list<Tp> &other) {
         clear();
         for (const Tp &value : other) 
             push_back(value);
@@ -476,7 +476,7 @@ namespace dsl {
     template <typename Tp>
     doubly_linked_list<Tp>& doubly_linked_list<Tp>::operator=(const doubly_linked_list<Tp> &other) {
         if (this != &other) 
-            try_assignment(other);
+            try_copy(other);
         return *this;
     }
 
@@ -512,10 +512,7 @@ namespace dsl {
 
     template <typename Tp>
     constexpr void doubly_linked_list<Tp>::assign(std::initializer_list<Tp> ilist) {
-        resize(ilist.size());
-        auto it = begin();
-        for (auto ilistIt = ilist.begin(); ilistIt != ilist.end() && it != end(); ++ilistIt)
-            *it = *ilistIt; 
+        assign(ilist.begin(), ilist.end());
     }
 
     template <typename Tp>
@@ -560,10 +557,7 @@ namespace dsl {
 
     template <typename Tp>
     constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, std::initializer_list<Tp> ilist) {
-        auto it = dynamic_cast<iterator>(pos);
-        for (auto ilistIt = ilist.begin(); ilistIt != ilist.end(); ++ilistIt)
-            it = emplace(it, *ilistIt);
-        return it;
+        return insert(pos, ilist.begin(), ilist.end());
     }
 
     template <typename Tp>

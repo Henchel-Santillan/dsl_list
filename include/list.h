@@ -4,6 +4,7 @@
 
 #include "list_base.h"
 
+#include <algorithm>
 #include <initializer_list>
 #include <iterator>
 #include <memory>
@@ -14,6 +15,8 @@
 namespace dsl {
 
     namespace details {
+
+        static constexpr const std::size_t growth_multiplier = 1.5;
 
         /**
          * @brief Iterator with const pointer and reference types.
@@ -237,6 +240,7 @@ namespace dsl {
             : list_base()
             , m_allocator(allocator)
             , m_data(nullptr) 
+            , m_capacity(0)
         {}
 
         list(const size_type count, 
@@ -288,8 +292,7 @@ namespace dsl {
 
         //* Destructor *//
         ~list() {
-            clear();
-            delete m_data;
+            erase(begin(), end());
             m_data = nullptr;
         }
 
@@ -422,7 +425,7 @@ namespace dsl {
         constexpr iterator insert(const_iterator, std::initializer_list<Tp>);
 
         template <class... Args>
-        constepxr iterator emplace(const_iterator, Args&&...);
+        constexpr iterator emplace(const_iterator, Args&&...);
 
         constexpr iterator erase(const_iterator);
         constexpr iterator erase(const_iterator, const_iterator);
@@ -445,11 +448,17 @@ namespace dsl {
     private:
         allocator_type m_allocator;
         Tp *m_data;
+        size_type m_capacity;
 
-        void try_assignment(const doubly_linked_list&);
-        void try_move(doubly_linked_list&&);
+        void check_bounds(const size_type) const;
+
+        void try_copy(const list&);
+        void try_move(list&&);
         void resize_erase(const size_type);
-        void resize_emplace(const size_type, const Tp&);        
+        void resize_emplace(const size_type, const Tp&);    
+
+        constexpr size_type compute_growth(const size_type) const noexcept;
+        void reallocate_exactly(const size_type);    
     };
 
 
@@ -458,7 +467,228 @@ namespace dsl {
 
     //*** Private ***//
 
+    template <typename Tp>
+    void list<Tp>::check_bounds(const size_type pos) const {
+        if (pos >= this->m_size) 
+            throw std::out_of_range("Index out of bounds.");
+    }
+
+    template <typename Tp>
+    void list<Tp>::try_copy(const list &other) {
+        erase(begin(), end());
+        m_capacity = other.m_capacity;
+        m_data = static_cast<Tp*>(m_allocator.resource()->allocate(sizeof(Tp) * m_capacity, alignof(Tp)));
+        std::copy(other.begin(), other.end(), m_data);
+    }
+
+    template <typename Tp>
+    void list<Tp>::try_move(list &&other) {
+        erase(begin(), end());
+        m_capacity = other.m_capacity;
+        m_data = static_cast<Tp*>(m_allocator.resource()->allocate(sizeof(Tp) * m_capacity, alignof(Tp)));
+        std::move(other.begin(), other.end(), m_data);
+        other.clear();
+    }
+
+    template <typename Tp>
+    void list<Tp>::resize_erase(const size_type count) {
+
+    }
+
+    template <typename Tp>
+    void list<Tp>::resize_emplace(const size_type count, const Tp &value) {
+
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::size_type list<Tp>::compute_growth(const size_type new_size) const noexcept {
+        return (this->max_size() - (m_capacity / 2) || m_capacity * details::growth_multiplier < new_size) ? new_size : m_capacity * details::growth_multiplier;
+    }
+
+    template <typename Tp>
+    void list<Tp>::reallocate_exactly(const size_type min_size) {
+        constexpr size_type new_cap = compute_growth(min_size);
+        auto data = static_cast<Tp*>(m_allocator.resource()->allocate(sizeof(Tp) * new_cap, alignof(Tp)));
+        
+        for (auto i = 0; i < this->m_size; ++i) {
+            m_allocator.construct(std::addressof(data[i]), std::move(m_data[i]));
+            std::allocator_traits<allocator_type>::destroy(m_allocator, std::addressof(m_data[i]));
+        }
+
+        m_allocator.resource()->deallocate(m_data, sizeof(Tp) * m_capacity, alignof(Tp));
+        m_data = data;
+        m_capacity = new_cap;
+    }
+
     //*** Public ***//
+
+    //* Assignment operator overloads *//
+
+    template <typename Tp>
+    list<Tp>& list<Tp>::operator=(const list<Tp> &other) {
+        if (this != other) 
+            try_copy(other);
+        return *this;
+    }
+
+    template <typename Tp>
+    list<Tp>& list<Tp>::operator=(list<Tp> &&other) {
+        if (this != other) {
+            if (m_allocator == other.m_allocator) 
+                try_move(std::move(other));
+            else 
+                operator=(other);   // copy assignment
+        }
+        return *this;
+    }
+
+
+    //* Assign and allocator access *//
+
+    template <typename Tp>
+    constexpr void list<Tp>::assign(const size_type count, const Tp &value) {
+        resize();
+    }
+
+    template <typename Tp>
+    template <class InputIt>
+    constexpr void list<Tp>::assign(InputIt first, InputIt last) {
+
+    }
+
+    template <typename Tp>
+    constexpr void list<Tp>::assign(std::initializer_list<Tp> ilist) {
+
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::allocator_type list<Tp>::get_allocator() const noexcept {
+        return m_allocator;
+    }
+
+
+    //* Element Access *//
+
+    template <typename Tp>
+    constexpr list<Tp>::reference list<Tp>::at(const size_type pos) {
+        check_bounds(pos);
+        return m_data[pos];
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::const_reference list<Tp>::at(const size_type pos) const {
+        check_bounds(pos);
+        return m_data[pos];
+    }
+
+
+    template <typename Tp>
+    constexpr void list<Tp>::reserve(const size_type new_cap) {
+        if (new_cap > this->this->max_size()) 
+            throw std::length_error("New capacity cannot be larger than the maximum supported list size.");
+        
+        if (new_cap > m_capacity) 
+            reallocate_exactly(new_cap);
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::size_type list<Tp>::capacity() const noexcept {
+        return m_capacity;
+    }
+
+    template <typename Tp>
+    constexpr void list<Tp>::shrink_to_fit() {
+        for (auto i = this->m_size; i < m_capacity; ++i) {
+            std::allocator_traits<allocator_type>::destroy(m_allocator, std::addressof(m_data + i));
+            m_allocator.resource()->deallocate(m_data + i, sizeof(Tp), alignof(Tp));
+        }
+        m_capacity = this->m_size;
+    }
+
+
+    //* Modifiers *//
+
+    template <typename Tp>
+    constexpr void list<Tp>::clear() noexcept {
+        erase(begin(), end());
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::iterator list<Tp>::insert(const_iterator pos, const Tp &value) {
+        return emplace(pos, value);
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::iterator list<Tp>::insert(const_iterator pos, Tp &&value) {
+        return emplace(pos, std::move(value));
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::iterator list<Tp>::insert(const_iterator pos, const size_type count, const Tp &value) {
+        if (this->m_size + count > m_capacity) 
+            reallocate_exactly(m_capacity + count);
+
+        auto it = pos - begin();
+        std::move(it, end(), it + 1);
+        *it = std::move(value);
+
+        this->m_size += count;
+        return dynamic_cast<iterator>(it);
+    }
+
+    template <typename Tp>
+    template <class InputIt>
+    constexpr list<Tp>::iterator list<Tp>::insert(const_iterator pos, InputIt first, InputIt last) {
+        auto count = std::distance(first, last);
+        if (this->m_size + count > m_capacity) 
+            reallocate_exactly(m_capacity + count);
+        
+        auto it = pos - begin();
+        std::move(it, end(), it + count);
+        std::copy(first, last, it);
+
+        this->m_size += count;
+        return dynamic_cast<iterator>(it);
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::iterator list<Tp>::insert(const_iterator pos, std::initializer_list<Tp> ilist) {
+        return insert(pos, ilist.begin(), ilist.end());
+    }
+
+    template <typename Tp>
+    template <class... Args>
+    constexpr list<Tp>::iterator list<Tp>::emplace(const_iterator pos, Args &&...args) {
+        auto index = pos - begin();
+        m_data[index] = static_cast<Tp*>(m_allocator.resource()->allocate(sizeof(Tp), alignof(Tp)));
+        
+        try {
+            m_allocator.construct(m_data[index], std::forward<Args>(args)...);
+        } catch (...) {
+            m_allocator.resource()->deallocate(m_data[index], sizeof(Tp), alignof(Tp));
+            throw;
+        }
+
+        ++this->m_size;
+        return dynamic_cast<iterator>(pos);
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::iterator list<Tp>::erase(const_iterator pos) {
+        erase(pos, std::next(pos));
+    }
+
+    template <typename Tp>
+    constexpr list<Tp>::iterator list<Tp>::erase(const_iterator first, const_iterator last) {
+        while (first != last) {
+            auto elem = *first;
+            --this->m_size;
+            std::allocator_traits<allocator_type>::destroy(m_allocator, std::addressof(elem));
+            m_allocator.resource()->deallocate(std::addressof(elem), sizeof(Tp), alignof(Tp));
+            ++first;
+        }
+        return dynamic_cast<iterator>(first);
+    }
 
 }   // namespace dsl 
 

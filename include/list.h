@@ -492,12 +492,13 @@ namespace dsl {
 
     template <typename Tp>
     void list<Tp>::resize_erase(const size_type count) {
-
+        erase(begin() + count, end());
     }
 
     template <typename Tp>
     void list<Tp>::resize_emplace(const size_type count, const Tp &value) {
-
+        for (auto i = 0; i < count; ++i) 
+            push_back(value);
     }
 
     template <typename Tp>
@@ -547,18 +548,23 @@ namespace dsl {
 
     template <typename Tp>
     constexpr void list<Tp>::assign(const size_type count, const Tp &value) {
-        resize();
+        resize(count, value);
+        for (auto it = begin(); it != end(); ++it) 
+            *it = value;
     }
 
     template <typename Tp>
     template <class InputIt>
     constexpr void list<Tp>::assign(InputIt first, InputIt last) {
-
+        resize(std::distance(first, last));
+        auto it = begin();
+        for (; first != last && it != end(); ++first) 
+            *it = *first;
     }
 
     template <typename Tp>
     constexpr void list<Tp>::assign(std::initializer_list<Tp> ilist) {
-
+        assign(ilist.begin(), ilist.end());
     }
 
     template <typename Tp>
@@ -610,7 +616,7 @@ namespace dsl {
 
     template <typename Tp>
     constexpr void list<Tp>::clear() noexcept {
-        erase(begin(), end());
+        
     }
 
     template <typename Tp>
@@ -688,6 +694,65 @@ namespace dsl {
             ++first;
         }
         return dynamic_cast<iterator>(first);
+    }
+
+    template <typename Tp>
+    constexpr void list<Tp>::push_back(const Tp &value) {
+        emplace_back(value);
+    }
+
+    template <typename Tp>
+    constexpr void list<Tp>::push_back(Tp &&value) {
+        emplace_back(std::move(value));
+    }
+
+    template <typename Tp>
+    template <class... Args>    
+    constexpr list<Tp>::reference list<Tp>::emplace_back(Args &&...args) {
+        auto it = emplace(std::prev(end()), std::forward<Args>(args)...);
+        return *it;
+    }
+
+    template <typename Tp>
+    constexpr void list<Tp>::pop_back() {
+        erase(std::prev(end()));
+    }
+
+    template <typename Tp>
+    constexpr void list<Tp>::resize(const size_type count) {
+        resize(count, Tp()):
+    }
+
+    template <typename Tp>
+    constexpr void list<Tp>::resize(const size_type count, const Tp &value) {
+        if (this->m_size == count)
+            return;
+
+        bool size_equals_capacity = this->m_size == m_capacity;
+        bool reallocated = false;
+        
+        if (size_equals_capacity && this->m_size < count) {
+            resize_emplace(count, Tp());
+            reallocated = true;
+        } else if (!size_equals_capacity && this->m_size < count && count < m_capacity) {
+                for (auto i = m_size; i < m_size + count; ++i) 
+                    m_data[i] = value;
+        } else resize_erase(count);
+
+        if (reallocated) 
+            m_capacity = count;
+        else 
+            this->m_size = count;
+    }
+
+    template <typename Tp>
+    constexpr void list<Tp>::swap(list &other) noexcept {
+        if (m_allocator == other.m_allocator) {
+            using std::swap;
+            swap(this->m_size, other.m_size);
+            swap(m_capacity, other.m_capacity);
+            swap(m_data, other.m_data);
+        }
     }
 
 }   // namespace dsl 

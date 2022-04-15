@@ -616,7 +616,10 @@ namespace dsl {
 
     template <typename Tp>
     constexpr void list<Tp>::clear() noexcept {
-        
+        for (auto it = begin(); it != end(); ++it) {
+            --this->m_size;
+            std::allocator_traits<allocator_type>::destroy(m_allocator, std::addressof(*it));
+        }
     }
 
     template <typename Tp>

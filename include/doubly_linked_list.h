@@ -74,37 +74,43 @@ namespace dsl {
 
             //*** Member Functions ***//
 
-            [[nodiscard]] constexpr pointer operator->() const noexcept {
+            [[nodiscard]] pointer operator->() const noexcept {
                 return std::addressof(m_curr->m_value);
             }
 
-            [[nodiscard]] constexpr reference operator*() const noexcept {
+            [[nodiscard]] reference operator*() const noexcept {
                 return m_curr->m_value;
             }
 
-            constexpr doubly_const_iterator& operator++() noexcept {
+             doubly_const_iterator<Tp>& operator++() noexcept {
                 m_curr = m_curr->m_next;
                 return *this;
             }
 
-            constexpr doubly_const_iterator operator++(int) noexcept {
+             doubly_const_iterator<Tp> operator++(int) noexcept {
                 doubly_const_iterator it(*this);
                 ++(*this);
                 return it;
             }
 
-            constexpr doubly_const_iterator& operator--() noexcept {
+             doubly_const_iterator& operator--() noexcept {
                 m_curr = m_curr->m_prev;
                 return *this;
             }
 
-            constexpr doubly_const_iterator operator--(int) noexcept {
+             doubly_const_iterator operator--(int) noexcept {
                 doubly_const_iterator it(*this);
                 ++(*this);
                 return it;
             }
 
-            [[nodiscard]] constexpr auto operator<=>(const doubly_const_iterator&) const noexcept = default;
+            bool operator==(const doubly_const_iterator &other) const noexcept {
+                return m_curr == other.m_curr;
+            }
+
+            bool operator!=(const doubly_const_iterator &other) const noexcept {
+                return !operator!=(other);
+            }
 
 
         protected:
@@ -113,8 +119,8 @@ namespace dsl {
             doubly_node_base<Tp> *m_curr;
 
             // Non-public explicit constructor to enable iterator construction for derived classes and friend classes
-            constexpr explicit doubly_const_iterator(const doubly_node_base<Tp> *curr) 
-                : m_curr(const_cast<double_node_base<Tp>*>(curr)) {}
+             explicit doubly_const_iterator(const doubly_node_base<Tp> *curr) 
+                : m_curr(const_cast<doubly_node_base<Tp>*>(curr)) {}
         };
 
 
@@ -124,37 +130,40 @@ namespace dsl {
 
             //*** Member Types ***//
 
-            using pointer = Tp*;
-            using reference = Tp&;
+            using base_t = doubly_const_iterator<Tp>;
+            using value_type = typename base_t::value_type;
+
+            using pointer = value_type*;
+            using reference = value_type&;
 
 
             //*** Member Functions ***//
 
-            [[nodiscard]] constexpr pointer operator->() const noexcept {
+            [[nodiscard]] pointer operator->() const noexcept {
                 return std::addressof(this->m_curr->m_value);
             }
 
-            [[nodiscard]] constexpr reference operator*() const noexcept {
+            [[nodiscard]] reference operator*() const noexcept {
                 return this->m_curr->m_value;
             }
 
-            constexpr doubly_const_iterator& operator++() noexcept {
-                this->m_curr = this->m_curr->m_next;
+             doubly_iterator& operator++() noexcept {
+                base_t::operator++();
                 return *this;
             }
 
-            constexpr doubly_const_iterator operator++(int) noexcept {
+             doubly_iterator operator++(int) noexcept {
                 doubly_iterator it(*this);
                 ++(*this);
                 return it;
             }
 
-            constexpr doubly_const_iterator& operator--() noexcept {
+             doubly_iterator& operator--() noexcept {
                 this->m_curr = this->m_curr->m_prev;
                 return *this;
             }
 
-            constexpr doubly_const_iterator operator--(int) noexcept {
+             doubly_iterator operator--(int) noexcept {
                 doubly_iterator it(*this);
                 ++(*this);
                 return it;
@@ -165,7 +174,7 @@ namespace dsl {
                 friend class doubly_linked_list<Tp>;
 
                 explicit doubly_iterator(const doubly_node_base<Tp> *curr) 
-                    : doubly_const_iterator(prev) {}
+                    : doubly_const_iterator<Tp>(curr) {}
         };
 
     }   // namespace details
@@ -199,7 +208,7 @@ namespace dsl {
         //* Constructors *//
 
         explicit doubly_linked_list(allocator_type allocator = {})
-            : list_base()
+            : details::list_base<Tp>()
             , m_allocator(allocator)
             , m_head(nullptr)
             , m_tail(nullptr)
@@ -266,170 +275,143 @@ namespace dsl {
 
         //* Assign and allocator access *//
         
-        constexpr void assign(const size_type, const Tp&);
+         void assign(const size_type, const Tp&);
 
         template <class InputIt>
-        constexpr void assign(InputIt, InputIt);
+         void assign(InputIt, InputIt);
 
-        constexpr void assign(std::initializer_list<Tp>);
+         void assign(std::initializer_list<Tp>);
 
-        constexpr allocator_type get_allocator() const noexcept;
+         allocator_type get_allocator() const noexcept;
 
 
         //* Element Access *//
 
-        constexpr reference front() {
+         reference front() {
             return m_head->m_value;
         }
 
-        constexpr const_reference front() const {
+         const_reference front() const {
             return m_head->m_value;
         }
 
-        constexpr reference back() {
+         reference back() {
             return m_tail->m_value;
         }
 
-        constexpr const_reference back() const {
+         const_reference back() const {
             return m_tail->m_value;
         }
 
 
         //* Iterators *//
 
-        constexpr iterator begin() noexcept {
+         iterator begin() noexcept {
             return iterator(m_head);
         }
 
-        constexpr const_iterator begin() const noexcept {
+         const_iterator begin() const noexcept {
             return const_iterator(m_head);
         }
 
-        constexpr const_iterator cbegin() const noexcept {
+         const_iterator cbegin() const noexcept {
             return const_iterator(m_head);
         }
 
-        constexpr iterator end() noexcept {
+         iterator end() noexcept {
             return iterator(m_tail);
         }
 
-        constexpr const_iterator end() const noexcept {
+         const_iterator end() const noexcept {
             return const_iterator(m_tail);
         }
 
-        constexpr const_iterator cend() const noexcept {
+         const_iterator cend() const noexcept {
             return const_iterator(m_tail);
         }
 
-        constexpr reverse_iterator rbegin() noexcept {
+         reverse_iterator rbegin() noexcept {
             return reverse_iterator(m_tail);
         }
 
-        constexpr const_reverse_iterator rbegin() const noexcept {
+         const_reverse_iterator rbegin() const noexcept {
             return const_reverse_iterator(m_tail);
         }
 
-        constexpr const_reverse_iterator crbegin() const noexcept {
+         const_reverse_iterator crbegin() const noexcept {
             return const_reverse_iterator(m_tail);
         }
 
-        constexpr reverse_iterator rend() noexcept {
+         reverse_iterator rend() noexcept {
             return reverse_iterator(m_head);
         }
 
-        constexpr const_reverse_iterator rend() const noexcept {
+         const_reverse_iterator rend() const noexcept {
             return const_reverse_iterator(m_head);
         }
 
-        constexpr const_reverse_iterator crend() const noexcept {
+         const_reverse_iterator crend() const noexcept {
             return const_reverse_iterator(m_head);
         }
 
 
         //* Modifiers *//
 
-        constexpr void clear() noexcept;
+         void clear() noexcept;
 
-        constexpr iterator insert(const_iterator, const Tp&);
-        constexpr iterator insert(const_iterator, Tp&&);
-        constexpr iterator insert(const_iterator, size_type, const Tp&);
+         iterator insert(const_iterator, const Tp&);
+         iterator insert(const_iterator, Tp&&);
+         iterator insert(const_iterator, size_type, const Tp&);
 
         template <class InputIt>
-        constexpr iterator insert(const_iterator, InputIt, InputIt);
+         iterator insert(const_iterator, InputIt, InputIt);
 
-        constexpr iterator insert(const_iterator, std::initializer_list<Tp>);
-
-        template <class... Args>
-        constexpr iterator emplace(const_iterator, Args&&...);
-
-        constexpr iterator erase(const_iterator);
-        constexpr iterator erase(const_iterator, const_iterator);
-
-        constexpr void push_back(const Tp&);
-        constexpr void push_back(Tp&&);
+         iterator insert(const_iterator, std::initializer_list<Tp>);
 
         template <class... Args>
-        constexpr reference emplace_back(Args&&...);
+         iterator emplace(const_iterator, Args&&...);
 
-        constexpr void pop_back();
+         iterator erase(const_iterator);
+         iterator erase(const_iterator, const_iterator);
 
-        constexpr void push_front(const Tp&);
-        constexpr void push_front(Tp&&);
+         void push_back(const Tp&);
+         void push_back(Tp&&);
 
         template <class... Args>
-        constexpr reference emplace_front(Args&&...);
+         reference emplace_back(Args&&...);
 
-        constexpr void pop_front();
+         void pop_back();
 
-        constexpr void resize(const size_type);
-        constexpr void resize(const size_type, const Tp&);
+         void push_front(const Tp&);
+         void push_front(Tp&&);
 
-        constexpr void swap(doubly_linked_list&) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value);
+        template <class... Args>
+         reference emplace_front(Args&&...);
 
+         void pop_front();
 
-        //* Operations *//
+         void resize(const size_type);
+         void resize(const size_type, const Tp&);
 
-        void merge(doubly_linked_list&);
-        void merge(doubly_linked_list&&);
-
-        template <class Compare>
-        void merge(doubly_linked_list&, Compare);
-
-        template <class Compare>
-        void merge(doubly_linked_list&&, Compare);
-
-        void splice(const_iterator, doubly_linked_list&);
-        void splice(const_iterator, doubly_linked_list&&);
-        void splice(const_iterator, doubly_linked_list&, const_iterator);
-        void splice(const_iterator, doubly_linked_list&&, const_iterator);
-        void splice(const_iterator, doubly_linked_list&, const_iterator, const_iterator);
-        void splice(const_iterator, doubly_linked_list&&, const_iterator, const_iterator);
-
-        size_type remove(const Tp&);
-
-        template <class UnaryPredicate>
-        size_type remove_if(UnaryPredicate);
-
-        void reverse() noexcept;
-
-        size_type unique();
-
-        template <class BinaryPredicate>
-        size_type unique(BinaryPredicate);
-
-        void sort();
-
-        template <class Compare>
-        void sort(Compare);
+         void swap(doubly_linked_list&) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value);
 
 
     private:
+
+        //*** Using Directives ***//
+
         using node_base_t = typename details::doubly_node_base<Tp>;
         using node_t = typename details::doubly_node<Tp>;
+
+
+        //*** Members ***//
 
         allocator_type m_allocator;
         node_base_t *m_head;
         node_base_t *m_tail;
+
+
+        //*** Functions ***//
 
         void try_copy(const doubly_linked_list&);
         void try_move(doubly_linked_list&&);
@@ -481,7 +463,7 @@ namespace dsl {
     }
 
     template <typename Tp>
-    doubly_linked_list<Tp>& doubly_linked_list<Tp>::operator=(const doubly_linked_list<Tp> &other) {
+    doubly_linked_list<Tp>& doubly_linked_list<Tp>::operator=(doubly_linked_list<Tp> &&other) {
         if (this != other) {
             if (m_allocator == other.m_allocator)
                 try_move(std::move(other));
@@ -495,7 +477,7 @@ namespace dsl {
     //* Assign and allocator access *//
 
     template <typename Tp>
-    doubly_linked_list<Tp>& doubly_linked_list<Tp>::assign(const size_type count, const Tp &value) {
+    void doubly_linked_list<Tp>::assign(const size_type count, const Tp &value) {
         resize(count);
         for (auto it = begin(); it != end(); ++it) 
             *it = value;
@@ -503,7 +485,7 @@ namespace dsl {
 
     template <typename Tp>
     template <class InputIt>
-    constexpr void doubly_linked_list<Tp>::assign(InputIt first, InputIt last) {
+    void doubly_linked_list<Tp>::assign(InputIt first, InputIt last) {
         resize(std::distance(first, last));
         auto it = begin();
         for (; first != last && it != end(); ++first)
@@ -511,12 +493,12 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::assign(std::initializer_list<Tp> ilist) {
+    void doubly_linked_list<Tp>::assign(std::initializer_list<Tp> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
     template <typename Tp>
-    constexpr doubly_linked_list<Tp>::allocator_type doubly_linked_list<Tp>::get_allocator() const noexcept {
+    typename doubly_linked_list<Tp>::allocator_type doubly_linked_list<Tp>::get_allocator() const noexcept {
         return m_allocator;
     }
 
@@ -524,22 +506,22 @@ namespace dsl {
     //* Modifiers *//
     
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::clear() noexcept {
+    void doubly_linked_list<Tp>::clear() noexcept {
         erase(begin(), end());
     }
 
     template <typename Tp>
-    constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, const Tp &value) {
+    typename doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, const Tp &value) {
         return emplace(pos, value);
     }
 
     template <typename Tp>
-    constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, Tp &&value) {
+    typename doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, Tp &&value) {
         return emplace(pos, std::move(value));
     }
 
     template <typename Tp>
-    constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, const size_type count, const Tp &value) {
+    typename doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, const size_type count, const Tp &value) {
         auto it = dynamic_cast<iterator>(pos);
         for (auto i = 0; i < count; ++i) 
             it = emplace(it, value);
@@ -548,7 +530,7 @@ namespace dsl {
 
     template <typename Tp>
     template <class InputIt>
-    constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, InputIt first, InputIt last) {
+    typename doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, InputIt first, InputIt last) {
         auto it = dynamic_cast<iterator>(pos);
         for (; first != last; ++first) 
             it = emplace(it, *first);
@@ -556,13 +538,13 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, std::initializer_list<Tp> ilist) {
+    typename doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::insert(const_iterator pos, std::initializer_list<Tp> ilist) {
         return insert(pos, ilist.begin(), ilist.end());
     }
 
     template <typename Tp>
     template <class... Args>
-    constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::emplace(const_iterator pos, Args &&...args) {
+    typename doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::emplace(const_iterator pos, Args &&...args) {
         auto pNode = static_cast<node_t*>(m_allocator.resource()->allocate(sizeof(node_t), alignof(node_t)));
 
         try {
@@ -587,12 +569,12 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::erase(const_iterator pos) {
+    typename doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::erase(const_iterator pos) {
         return erase(pos, std::next(pos));
     }
 
     template <typename Tp>
-    constexpr doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::erase(const_iterator first, const_iterator last) {
+    typename doubly_linked_list<Tp>::iterator doubly_linked_list<Tp>::erase(const_iterator first, const_iterator last) {
         auto next = first.m_curr;
         auto past = last.m_curr;
 
@@ -613,46 +595,46 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::push_back(const Tp &value) {
+    void doubly_linked_list<Tp>::push_back(const Tp &value) {
         emplace_back(value);
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::push_back(Tp &&value) {
+    void doubly_linked_list<Tp>::push_back(Tp &&value) {
         emplace_back(std::move(value));
     }
 
     template <typename Tp>
     template <class... Args>
-    constexpr doubly_linked_list<Tp>::reference doubly_linked_list<Tp>::emplace_back(Args &&...args) {
+    typename doubly_linked_list<Tp>::reference doubly_linked_list<Tp>::emplace_back(Args &&...args) {
         auto it = emplace(end(), std::forward<Args>(args)...);
         return *it;
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::pop_back() {
+    void doubly_linked_list<Tp>::pop_back() {
         erase(end());
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::push_front(const Tp &value) {
+    void doubly_linked_list<Tp>::push_front(const Tp &value) {
         emplace_front(value);
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::push_front(Tp &&value) {
+    void doubly_linked_list<Tp>::push_front(Tp &&value) {
         emplace_front(std::move(value));
     }
 
     template <typename Tp>
     template <class... Args>
-    constexpr doubly_linked_list<Tp>::reference doubly_linked_list<Tp>::emplace_front(Args &&...args) {
+    typename doubly_linked_list<Tp>::reference doubly_linked_list<Tp>::emplace_front(Args &&...args) {
         auto it = emplace(begin(), std::forward<Args>(args)...);
         return *it;
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::resize(const size_type count) {
+    void doubly_linked_list<Tp>::resize(const size_type count) {
         if (count < this->m_size) 
             resize_erase(count);
         else if (count > this->m_size) 
@@ -661,7 +643,7 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::resize(const size_type count, const Tp &value) {
+    void doubly_linked_list<Tp>::resize(const size_type count, const Tp &value) {
         if (count < this->m_size) 
             resize_erase(count);
         else if (count > this->m_size) 
@@ -670,13 +652,13 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr void doubly_linked_list<Tp>::swap(doubly_linked_list<Tp> &other) noexcept {
+    void doubly_linked_list<Tp>::swap(doubly_linked_list<Tp> &other) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value) {
         if (m_allocator == other.m_allocator) {
             auto head = other.empty() ? m_tail : other.m_head;
-            auto other_head = empty() ? other.m_tail : m_head;
+            auto other_head = this->empty() ? other.m_tail : m_head;
 
             auto tail = other.empty() ? m_head : other.m_tail;
-            auto other_tail = empty() ? other.m_head : m_tail;
+            auto other_tail = this->empty() ? other.m_head : m_tail;
 
             swap(this->m_size, other.m_size);
             m_head = head;
@@ -685,6 +667,21 @@ namespace dsl {
             other.m_tail = other_tail;
         }
     }
+
+
+
+    //*** Non-Member Function Implementations ***//
+
+    template <typename Tp>
+    bool operator==(const doubly_linked_list<Tp> &lhs, const doubly_linked_list<Tp> &rhs) noexcept {
+        return (lhs.size() != rhs.size()) ? false : std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+
+    template <typename Tp>
+    bool operator!=(const doubly_linked_list<Tp> &lhs, const doubly_linked_list<Tp> &rhs) {
+        return !operator==(lhs, rhs);
+    }
+
 
 }   // namespace dsl
 

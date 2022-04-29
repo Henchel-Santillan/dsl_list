@@ -357,12 +357,21 @@ namespace dsl {
 
 
     private:
+
+        //* Using Directives *//
+
         using node_base_t = typename details::singly_node_base<Tp>;
         using node_t = typename details::singly_node<Tp>;
+
+
+        //* Members *//
 
         allocator_type m_allocator;
         node_base_t  m_head;
         node_base_t *m_tail;
+
+
+        //* Functions *//
 
         void try_copy(const singly_linked_list&);
         void try_move(singly_linked_list&&);
@@ -611,7 +620,15 @@ namespace dsl {
 
     //*** Non-Member Function Implementations ***//
 
+    template <typename Tp>
+    bool operator==(const singly_linked_list<Tp> &lhs, const singly_linked_list<Tp> &rhs) noexcept {
+        return (lhs.size() != rhs.size()) ? false : std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
 
+    template <typename Tp>
+    bool operator!=(const singly_linked_list<Tp> &lhs, const singly_linked_list<Tp> &rhs) noexcept {
+        return !operator==(lhs, rhs);
+    }
 
 
 }   // namespace dsl

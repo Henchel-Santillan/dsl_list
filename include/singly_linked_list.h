@@ -71,27 +71,32 @@ namespace dsl {
 
             //*** Member Functions ***//
 
-            [[nodiscard]] constexpr pointer operator->() const noexcept {
+            [[nodiscard]] pointer operator->() const noexcept {
                 return std::addressof(m_prev->m_next->m_value);
             }
 
-            [[nodiscard]] constexpr reference operator*() const noexcept {
+            [[nodiscard]] reference operator*() const noexcept {
                 return m_prev->m_next->m_value;
             }
 
-            constexpr singly_const_iterator& operator++() noexcept {
+            singly_const_iterator& operator++() noexcept {
                 m_prev = m_prev->m_next;
                 return *this;
             }
 
-            constexpr singly_const_iterator operator++(int) noexcept {
+            singly_const_iterator operator++(int) noexcept {
                 singly_const_iterator it(*this);
                 ++(*this);
                 return it;
             }
 
-            [[nodiscard]] constexpr auto operator<=>(const singly_const_iterator&) const noexcept = default;
+            bool operator==(const singly_const_iterator &other) const noexcept {
+                return m_prev == other.m_prev;
+            }
 
+            bool operator!=(const singly_const_iterator &other) const noexcept {
+                return !operator==(other);
+            }
 
         protected:
             friend class singly_linked_list<Tp>;
@@ -99,7 +104,7 @@ namespace dsl {
             singly_node_base<Tp> *m_prev;
 
             // Non-public explicit constructor to enable iterator construction for derived classes and friend classes
-            constexpr explicit singly_const_iterator(const singly_node_base<Tp> *prev) 
+            explicit singly_const_iterator(const singly_node_base<Tp> *prev) 
                 : m_prev(const_cast<singly_node_base<Tp>*>(prev)) {}
         };
 
@@ -116,26 +121,29 @@ namespace dsl {
 
             //*** Member Types ***//
 
-            using pointer = Tp*;
-            using reference = Tp&;
+            using base_t = singly_const_iterator<Tp>;
+            using value_type = typename base_t::value_type;
+
+            using pointer = value_type*;
+            using reference = value_type&;
 
 
             //*** Member Functions ***//
 
-            [[nodiscard]] constexpr pointer operator->() const noexcept {
+            [[nodiscard]] pointer operator->() const noexcept {
                 return std::addressof(this->m_prev->m_next->m_value);
             }
 
-            [[nodiscard]] constexpr reference operator*() const noexcept {
+            [[nodiscard]] reference operator*() const noexcept {
                 return this->m_prev->m_next->m_value;
             }
 
-            constexpr singly_iterator& operator++() noexcept {
-                this->m_prev = this->m_prev->m_next;
+            singly_iterator& operator++() noexcept {
+                base_t::operator++();
                 return *this;
             }
 
-            constexpr singly_iterator operator++(int) noexcept {
+            singly_iterator operator++(int) noexcept {
                 singly_iterator it(*this);
                 ++(*this);
                 return it;
@@ -146,7 +154,7 @@ namespace dsl {
             friend class singly_linked_list<Tp>;
 
             explicit singly_iterator(const singly_node_base<Tp> *prev)
-                : singly_const_iterator(prev) {}
+                : singly_const_iterator<Tp>(prev) {}
         };
 
     }   // namespace details
@@ -183,7 +191,7 @@ namespace dsl {
         //* Constructors *//
 
         explicit singly_linked_list(allocator_type allocator = {})
-            : list_base()
+            : details::list_base<Tp>()
             , m_allocator(allocator)
             , m_head()
             , m_tail(nullptr)
@@ -252,136 +260,100 @@ namespace dsl {
 
         //* Assign and allocator access *//
         
-        constexpr void assign(const size_type, const Tp&);
+        void assign(const size_type, const Tp&);
         
         template <class InputIt>
-        constexpr void assign(InputIt, InputIt);
+        void assign(InputIt, InputIt);
 
-        constexpr void assign(std::initializer_list<Tp>);
+        void assign(std::initializer_list<Tp>);
 
-        constexpr allocator_type get_allocator() const noexcept;
+        allocator_type get_allocator() const noexcept;
 
 
         //* Element Access *//
 
-        constexpr reference front() {
+        reference front() {
             return m_head.m_next->m_value;
         }
 
-        constexpr const_reference front() const {
+        const_reference front() const {
             return m_head.m_next->m_value;
         }
 
 
         //* Iterators *//
 
-        constexpr iterator before_begin() noexcept {
+        iterator before_begin() noexcept {
             return iterator(&m_head);
         }
 
-        constexpr const_iterator before_begin() const noexcept {
+        const_iterator before_begin() const noexcept {
             return const_iterator(&m_head);
         }
 
-        constexpr const_iterator cbefore_begin() const noexcept {
+        const_iterator cbefore_begin() const noexcept {
             return const_iterator(&m_head);
         }
 
-        constexpr iterator begin() noexcept {
+        iterator begin() noexcept {
             return iterator(m_head.m_next);
         }
 
-        constexpr const_iterator begin() const noexcept {
+        const_iterator begin() const noexcept {
             return const_iterator(m_head.m_next);
         }
 
-        constexpr const_iterator cbegin() const noexcept {
+        const_iterator cbegin() const noexcept {
             return const_iterator(m_head.m_next);
         }
 
-        constexpr iterator end() noexcept {
+        iterator end() noexcept {
             return iterator(m_tail);
         }
 
-        constexpr const_iterator end() const noexcept {
+        const_iterator end() const noexcept {
             return const_iterator(m_tail);
         }
 
-        constexpr const_iterator cend() const noexcept {
+        const_iterator cend() const noexcept {
             return const_iterator(m_tail);
         }
 
 
         //* Modifiers *//
 
-        constexpr void clear() noexcept;
+        void clear() noexcept;
 
-        constexpr iterator insert_after(const_iterator, const Tp&);
-        constexpr iterator insert_after(const_iterator, Tp&&);
-        constexpr iterator insert_after(const_iterator, const size_type, const Tp&);
+        iterator insert_after(const_iterator, const Tp&);
+        iterator insert_after(const_iterator, Tp&&);
+        iterator insert_after(const_iterator, const size_type, const Tp&);
         
         template <class InputIt>
-        constexpr iterator insert_after(const_iterator, InputIt, InputIt);
+        iterator insert_after(const_iterator, InputIt, InputIt);
 
-        constexpr iterator insert_after(const_iterator, std::initializer_list<Tp>);
-
-        template <class... Args>
-        constexpr iterator emplace_after(const_iterator, Args&&...);
-
-        constexpr iterator erase_after(const_iterator);
-        constexpr iterator erase_after(const_iterator, const_iterator);
-
-        constexpr void push_front(const Tp&);
-        constexpr void push_front(Tp&&);
+        iterator insert_after(const_iterator, std::initializer_list<Tp>);
 
         template <class... Args>
-        constexpr void emplace_front(Args&&...);
+        iterator emplace_after(const_iterator, Args&&...);
+
+        iterator erase_after(const_iterator);
+        iterator erase_after(const_iterator, const_iterator);
+
+        void push_front(const Tp&);
+        void push_front(Tp&&);
 
         template <class... Args>
-        constexpr reference emplace_front(Args&&...);
+        void emplace_front(Args&&...);
 
-        constexpr void pop_front();
+        template <class... Args>
+        reference emplace_front(Args&&...);
 
-        constexpr void resize(const size_type);
-        constexpr void resize(const size_type, const Tp&);
+        void pop_front();
 
-        constexpr void swap(singly_linked_list&) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value);
+        void resize(const size_type);
+        void resize(const size_type, const Tp&);
 
-
-        //* Operations *//
-
-        void merge(singly_linked_list&);
-        void merge(singly_linked_list&&);
-
-        template <class Compare>
-        void merge(singly_linked_list&, Compare);
-
-        template <class Compare>
-        void merge(singly_linked_list&&, Compare);
-
-        void splice_after(const_iterator, singly_linked_list&);
-        void splice_after(const_iterator, singly_linked_list&&);
-        void splice_after(const_iterator, singly_linked_list&, const_iterator);
-        void splice_after(const_iterator, singly_linked_list&&, const_iterator);
-        void splice_after(const_iterator, singly_linked_list&, const_iterator, const_iterator);
-        void splice_after(const_iterator, singly_linked_list&&, const_iterator, const_iterator);
-
-        size_type remove(const Tp&);
-
-        template <class UnaryPredicate>
-        size_type remove_if(UnaryPredicate);
-
-        void reverse() noexcept;
-
-        size_type unique();
-
-        template <class BinaryPredicate>
-        size_type unique(BinaryPredicate);
-
-        void sort();
-
-        template <class Compare>
-        void sort(Compare);
+        void swap(singly_linked_list&) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value);
 
 
     private:
@@ -460,7 +432,7 @@ namespace dsl {
     //* Assign and allocator access *//
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::assign(const size_type count, const Tp& value) {
+    void singly_linked_list<Tp>::assign(const size_type count, const Tp& value) {
         resize(count);
         for (auto it = begin(); it != end(); ++it) 
             *it = value;
@@ -468,7 +440,7 @@ namespace dsl {
 
     template <typename Tp>
     template <class InputIt>
-    constexpr void singly_linked_list<Tp>::assign(InputIt first, InputIt last) {
+    void singly_linked_list<Tp>::assign(InputIt first, InputIt last) {
         resize(std::distance(first, last));
         auto it = begin();
         for (; first != last && it != end(); ++first)
@@ -476,12 +448,12 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::assign(std::initializer_list<Tp> ilist) {
+    void singly_linked_list<Tp>::assign(std::initializer_list<Tp> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
     template <typename Tp>
-    constexpr singly_linked_list<Tp>::allocator_type singly_linked_list<Tp>::get_allocator() const noexcept {
+    typename singly_linked_list<Tp>::allocator_type singly_linked_list<Tp>::get_allocator() const noexcept {
         return m_allocator;
     }
 
@@ -489,22 +461,22 @@ namespace dsl {
     //* Modifiers *//
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::clear() noexcept {
+    void singly_linked_list<Tp>::clear() noexcept {
         erase_after(before_begin(), end());
     }
 
     template <typename Tp>
-    constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, const Tp &value) {
+    typename singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, const Tp &value) {
         return emplace_after(pos, value);
     }
 
     template <typename Tp>
-    constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, Tp &&value) {
+    typename singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, Tp &&value) {
         return emplace_after(pos, std::move(value));
     }
 
     template <typename Tp>
-    constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, const size_type count, const Tp &value) {
+    typename singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, const size_type count, const Tp &value) {
         auto it = dynamic_cast<iterator>(pos);
         for (auto i = 0; i < count; ++i) 
             it = emplace_after(pos, value);
@@ -513,7 +485,7 @@ namespace dsl {
 
     template <typename Tp>
     template <class InputIt>
-    constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, InputIt first, InputIt last) {
+    typename singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, InputIt first, InputIt last) {
         auto it = dynamic_cast<iterator>(pos);
         for (; first != last; ++first) 
             it = emplace_after(it, *first);
@@ -521,19 +493,19 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, std::initializer_list<Tp> ilist) {
+    typename singly_linked_list<Tp>::iterator singly_linked_list<Tp>::insert_after(const_iterator pos, std::initializer_list<Tp> ilist) {
         return insert_after(pos, ilist.begin(), ilist.end());
     }
 
     template <typename Tp>
     template <class... Args>
-    constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::emplace_after(const_iterator pos, Args &&...args) {
-        auto pNode = static_cast<node_t*>(m_allocator.resource()->allocate(sizeof(node_t), alignof(node_t)));
+    typename singly_linked_list<Tp>::iterator singly_linked_list<Tp>::emplace_after(const_iterator pos, Args &&...args) {
+        auto node = static_cast<node_t*>(m_allocator.resource()->allocate(sizeof(node_t), alignof(node_t)));
         
         try {
-            m_allocator.construct(std::addressof(pNode->m_value), std::forward<Args>(args)...);
+            m_allocator.construct(std::addressof(node->m_value), std::forward<Args>(args)...);
         } catch (...) {
-            m_allocator.resource()->deallocate(pNode, sizeof(node_t), alignof(node_t));
+            m_allocator.resource()->deallocate(node, sizeof(node_t), alignof(node_t));
             throw;
         }
 
@@ -541,72 +513,71 @@ namespace dsl {
         // pos.m_prev->m_next->m_next as an rvalue means the actual next node of the node at the current iterator position
         // pos.m_prev->m_next->m_next as an lvalue means setting the next node of the node at the current iterator position to the newly created node
         pNode->m_next = pos.m_prev->m_next->m_next;
-        pos.m_prev->m_next->m_next = pNode;
+        pos.m_prev->m_next->m_next = node;
 
         if (pos.m_prev == m_tail) 
-            m_tail = pNode;
+            m_tail = node;
 
         ++this->m_size;
-        return std::next(dynamic_cast<iterator>(pos));
+        return dynamic_cast<iterator>(pos);
     }
 
     template <typename Tp>
-    constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::erase_after(const_iterator pos) {
-        auto it = std::next(pos);
-        return erase_after(it, std::next(it));
+    typename singly_linked_list<Tp>::iterator singly_linked_list<Tp>::erase_after(const_iterator pos) {
+        return (pos, std::next(pos));
     }
 
     template <typename Tp>
-    constexpr singly_linked_list<Tp>::iterator singly_linked_list<Tp>::erase_after(const_iterator first, const_iterator last) {
-        auto pNext = first.m_prev->m_next;
-        auto pPast = last.m_prev->m_next;
+    typename singly_linked_list<Tp>::iterator singly_linked_list<Tp>::erase_after(const_iterator first, const_iterator last) {
+        auto next = first.m_prev->m_next;
+        auto past = last.m_prev->m_next;
 
-        if (pPast == nullptr) 
+        if (past == nullptr) 
             m_tail = first.m_prev;
 
-        first.m_prev->m_next = pPast;
+        first.m_prev->m_next = past;
 
-        while (pNext != pPast) {
-            auto pOld = pNext;
-            pNext = pNext->m_next;
+        while (next != past) {
+            auto old = next;
+            next = next->m_next;
             --this->m_size;
-            std::allocator_traits<allocator_type>::destroy(m_allocator, std::addressof(pOld->m_value));
-            m_allocator.resource()->deallocate(pOld, sizeof(node_t), alignof(node_t));
+            std::allocator_traits<allocator_type>::destroy(m_allocator, std::addressof(old->m_value));
+            m_allocator.resource()->deallocate(old, sizeof(node_t), alignof(node_t));
         }
 
         return dynamic_cast<iterator>(first);
     }
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::push_front(const Tp &value) {
+    void singly_linked_list<Tp>::push_front(const Tp &value) {
         emplace_front(value);
     }
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::push_front(Tp &&value) {
+    void singly_linked_list<Tp>::push_front(Tp &&value) {
         emplace_front(std::move(value));
     }
 
     template <typename Tp>
     template <class... Args>
-    constexpr void singly_linked_list<Tp>::emplace_front(Args &&...args) {
+    void singly_linked_list<Tp>::emplace_front(Args &&...args) {
         emplace_after(before_begin(), std::forward<Args>(args)...);
     }
 
     template <typename Tp>
     template <class... Args>
-    constexpr singly_linked_list<Tp>::reference singly_linked_list<Tp>::emplace_front(Args &&...args) {
+    typename singly_linked_list<Tp>::reference singly_linked_list<Tp>::emplace_front(Args &&...args) {
         auto it = emplace_after(before_begin(), std::forward<Args>(args)...);
         return *it;
     }
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::pop_front() {
+    void singly_linked_list<Tp>::pop_front() {
         erase_after(before_begin());
     }
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::resize(const size_type count) {
+    void singly_linked_list<Tp>::resize(const size_type count) {
         if (count < this->m_size)         // need to erase elements
             resize_erase(count);
         else if (count > this->m_size)    // need to add elements
@@ -615,7 +586,7 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::resize(const size_type count, const Tp &value) {
+    void singly_linked_list<Tp>::resize(const size_type count, const Tp &value) {
         if (count < this->m_size) 
             resize_erase(count);
         else if (count > this->m_size) 
@@ -624,21 +595,23 @@ namespace dsl {
     }
 
     template <typename Tp>
-    constexpr void singly_linked_list<Tp>::swap(singly_linked_list<Tp> &other) noexcept {
+    void singly_linked_list<Tp>::swap(singly_linked_list<Tp> &other) noexcept(std::allocator_traits<allocator_type>::is_always_equal::value) {
         if (m_allocator == other.m_allocator) {
-            auto pTail = other.empty() ? &m_head : other.m_tail;
-            auto pOtherTail = empty() ? &other.m_head : m_tail;
+            auto tail = other.empty() ? &m_head : other.m_tail;
+            auto other_tail = this->empty() ? &other.m_head : m_tail;
 
             using std::swap;
             swap(m_head.m_next, other.m_head.m_next);
             swap(this->m_size, other.m_size);
-            m_tail = pTail;
-            other.m_tail = pOtherTail;
+            m_tail = tail;
+            other.m_tail = other_tail;
         }
     }
 
 
-    //* Operation *//
+    //*** Non-Member Function Implementations ***//
+
+
 
 
 }   // namespace dsl

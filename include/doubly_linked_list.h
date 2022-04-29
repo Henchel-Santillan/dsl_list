@@ -109,7 +109,7 @@ namespace dsl {
             }
 
             bool operator!=(const doubly_const_iterator &other) const noexcept {
-                return !operator!=(other);
+                return !operator==(other);
             }
 
 

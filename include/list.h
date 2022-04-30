@@ -681,12 +681,12 @@ namespace dsl {
     template <class... Args>
     typename list<Tp>::iterator list<Tp>::emplace(const_iterator pos, Args &&...args) {
         auto index = pos - begin();
-        m_data[index] = static_cast<Tp*>(m_allocator.resource()->allocate(sizeof(Tp), alignof(Tp)));
+        &m_data[index] = static_cast<Tp*>(m_allocator.resource()->allocate(sizeof(Tp), alignof(Tp)));
         
         try {
-            m_allocator.construct(m_data[index], std::forward<Args>(args)...);
+            m_allocator.construct(&m_data[index], std::forward<Args>(args)...);
         } catch (...) {
-            m_allocator.resource()->deallocate(m_data[index], sizeof(Tp), alignof(Tp));
+            m_allocator.resource()->deallocate(&m_data[index], sizeof(Tp), alignof(Tp));
             throw;
         }
 
@@ -768,6 +768,19 @@ namespace dsl {
             swap(m_capacity, other.m_capacity);
             swap(m_data, other.m_data);
         }
+    }
+
+
+    //*** Non-Member Function Implementations ***//
+
+    template <typename Tp>
+    bool operator==(const list<Tp> &lhs, const list<Tp> &rhs) {
+        return (lhs.size() != rhs.size()) ? false : std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+
+    template <typename Tp>
+    bool operator!=(const list<Tp> &lhs, const list<Tp> &rhs) {
+        return !operator==(lhs, rhs);
     }
 
 }   // namespace dsl 

@@ -519,10 +519,8 @@ namespace dsl {
         }
 
         // Note: pos.m_prev->m_next gets the node at the current iterator position
-        // pos.m_prev->m_next->m_next as an rvalue means the actual next node of the node at the current iterator position
-        // pos.m_prev->m_next->m_next as an lvalue means setting the next node of the node at the current iterator position to the newly created node
-        pNode->m_next = pos.m_prev->m_next->m_next;
-        pos.m_prev->m_next->m_next = node;
+        node->m_next = pos.m_prev->m_next;
+        pos.m_prev->m_next = node;
 
         if (pos.m_prev == m_tail) 
             m_tail = node;

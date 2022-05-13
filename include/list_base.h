@@ -53,15 +53,15 @@ namespace dsl::details {
 
         //* Capacity *//
 
-        [[nodiscard]] constexpr bool empty() const noexcept {
+        [[nodiscard]] bool empty() const noexcept {
             return m_size == 0;
         }
 
-        [[nodiscard]] constexpr size_type size() const noexcept {
+        [[nodiscard]] size_type size() const noexcept {
             return m_size;
         }
 
-        [[nodiscard]] constexpr size_type max_size() const noexcept {
+        [[nodiscard]] size_type max_size() const noexcept {
             return std::numeric_limits<difference_type>::max();
         }
 
